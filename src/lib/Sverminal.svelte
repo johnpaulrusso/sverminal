@@ -1,267 +1,267 @@
 <script context="module" lang="ts">
+	export enum CommandIndex {
+		PREFIX = 0,
+		COMMAND,
+		ARGS
+	}
+</script>
 
-    export enum CommandIndex {
-        PREFIX = 0,
-        COMMAND,
-        ARGS,
-    };
-    
-    </script>
-    
-    <script lang="ts">
-        import { onMount } from 'svelte';
-      
-        export let processCommand: (command: string) => Promise<string>;
-      
-        const prefix = 'sverm3.0$>';
-    
-        let sverminalDiv: HTMLDivElement;
-        let workingCommandLineDiv: HTMLDivElement;
-        let workingChildIndex: number = CommandIndex.COMMAND;
-      
-        async function handleCommand(command: string) {
-          try {
-            await processCommand(command);
-          } catch (error) {
-            console.error('Command processing failed', error);
-          } finally {
-            appendNewCommandLine();
-          }
-        }
+<script lang="ts">
+	import { onMount } from 'svelte';
 
-        function appendPrompt() {
-            let promptSpan = document.createElement('span');
-            promptSpan.setAttribute('contenteditable', 'false');
-            promptSpan.classList.add('text-cyan-500', 'focus:outline-none')
-            promptSpan.innerHTML = `${prefix} `;
-            workingCommandLineDiv.appendChild(promptSpan);
-        }
+	export let processCommand: (command: string) => Promise<string>;
 
-        function appendEmptyCommand() {
-            let commandSpan = document.createElement('span');
-            commandSpan.setAttribute('contenteditable', 'true');
-            commandSpan.classList.add('text-yellow-500', 'focus:outline-none')
-            
-            let emptyTextnode: Text = new Text('');
-            commandSpan.appendChild(emptyTextnode);
+	const prefix = 'sverm3.0$>';
 
-            workingCommandLineDiv.appendChild(commandSpan);
-        }
+	let sverminalDiv: HTMLDivElement;
+	let workingCommandLineDiv: HTMLDivElement;
+	let workingChildIndex: number = CommandIndex.COMMAND;
 
-        function placeCursorAtEndOfTextNode(textnode: Text){
+	async function handleCommand(command: string) {
+		try {
+			await processCommand(command);
+		} catch (error) {
+			console.error('Command processing failed', error);
+		} finally {
+			appendNewCommandLine();
+		}
+	}
 
-            const range = document.createRange();
-            const selection = window.getSelection();
-            range.setStart(textnode, textnode.textContent?.length!);
-            range.collapse(true);
-            selection?.removeAllRanges();
-            selection?.addRange(range);
-        }
+	function appendPrompt() {
+		let promptSpan = document.createElement('span');
+		promptSpan.setAttribute('contenteditable', 'false');
+		promptSpan.classList.add('text-cyan-500', 'focus:outline-none');
+		promptSpan.innerHTML = `${prefix} `;
+		workingCommandLineDiv.appendChild(promptSpan);
+	}
 
-        function placeCursorAtStartOfTextNode(textnode: Text){
+	function appendEmptyCommand() {
+		let commandSpan = document.createElement('span');
+		commandSpan.setAttribute('contenteditable', 'true');
+		commandSpan.classList.add('text-yellow-500', 'focus:outline-none');
 
-            const range = document.createRange();
-            const selection = window.getSelection();
-            range.setStart(textnode, 0);
-            range.collapse(true);
-            selection?.removeAllRanges();
-            selection?.addRange(range);
-        }
+		let emptyTextnode: Text = new Text('');
+		commandSpan.appendChild(emptyTextnode);
 
-        function getWorkingTextNodeOrCreateIfNull(): Text{
-            const childspan = workingCommandLineDiv.children.item(workingChildIndex) as Element;
-            let textnode = childspan.firstChild as Text | null;
-            if(!textnode){
-                let emptyTextnode: Text = new Text('');
-                childspan.appendChild(emptyTextnode);
-                textnode = emptyTextnode;
-            }
-            return textnode;
-        }
+		workingCommandLineDiv.appendChild(commandSpan);
+	}
 
-        function placeCursorAtWorkingIndex(start: boolean = false){
+	function placeCursorAtEndOfTextNode(textnode: Text) {
+		const range = document.createRange();
+		const selection = window.getSelection();
+		range.setStart(textnode, textnode.textContent?.length!);
+		range.collapse(true);
+		selection?.removeAllRanges();
+		selection?.addRange(range);
+	}
 
-            if(workingChildIndex >= workingCommandLineDiv.children.length){
-                console.error('Failed to place cursor in Sverminal!')
-                return;
-            }
+	function placeCursorAtStartOfTextNode(textnode: Text) {
+		const range = document.createRange();
+		const selection = window.getSelection();
+		range.setStart(textnode, 0);
+		range.collapse(true);
+		selection?.removeAllRanges();
+		selection?.addRange(range);
+	}
 
-            const textnode = getWorkingTextNodeOrCreateIfNull();
+	function getWorkingTextNodeOrCreateIfNull(): Text {
+		const childspan = workingCommandLineDiv.children.item(workingChildIndex) as Element;
+		let textnode = childspan.firstChild as Text | null;
+		if (!textnode) {
+			let emptyTextnode: Text = new Text('');
+			childspan.appendChild(emptyTextnode);
+			textnode = emptyTextnode;
+		}
+		return textnode;
+	}
 
-            if(start){
-                placeCursorAtStartOfTextNode(textnode);
-            }else{
-                placeCursorAtEndOfTextNode(textnode);
-            }
-            
-        }
-      
-        function appendNewCommandLine() {
-            workingCommandLineDiv = document.createElement('div');
+	function placeCursorAtWorkingIndex(start: boolean = false) {
+		if (workingChildIndex >= workingCommandLineDiv.children.length) {
+			console.error('Failed to place cursor in Sverminal!');
+			return;
+		}
 
-            appendPrompt();
-            appendEmptyCommand();
+		const textnode = getWorkingTextNodeOrCreateIfNull();
 
-            sverminalDiv.appendChild(workingCommandLineDiv);
+		if (start) {
+			placeCursorAtStartOfTextNode(textnode);
+		} else {
+			placeCursorAtEndOfTextNode(textnode);
+		}
+	}
 
-            workingChildIndex = CommandIndex.COMMAND;
-            placeCursorAtWorkingIndex();
-        }
-    
-        function appendNewArg(arg: string = "") {
-            let argSpan = document.createElement('span');
-            argSpan.setAttribute('contenteditable', 'true');
-            argSpan.classList.add('focus:outline-none')
-            argSpan.innerHTML = ``; 
+	function appendNewCommandLine() {
+		workingCommandLineDiv = document.createElement('div');
 
-            let textnode: Text = new Text(arg);
-            argSpan.appendChild(textnode);
+		appendPrompt();
+		appendEmptyCommand();
 
-            workingChildIndex++;
-            if(workingChildIndex >= workingCommandLineDiv.children.length){
-                workingCommandLineDiv.appendChild(argSpan);
-                placeCursorAtWorkingIndex(true);
-                console.log('new arg last!');
-            } else {
-                workingCommandLineDiv.insertBefore(argSpan, workingCommandLineDiv.children[workingChildIndex]);
-                placeCursorAtWorkingIndex(true);
-                console.log('new arg before!');
-            }
-        }
+		sverminalDiv.appendChild(workingCommandLineDiv);
 
-        function removeWorkingArg() {
-            let childToRemove = workingCommandLineDiv.children[workingChildIndex] as Element;
-            workingCommandLineDiv.removeChild(childToRemove);
-            workingChildIndex--;
+		workingChildIndex = CommandIndex.COMMAND;
+		placeCursorAtWorkingIndex();
+	}
 
-            placeCursorAtWorkingIndex();
+	function appendNewArg(arg: string = '') {
+		let argSpan = document.createElement('span');
+		argSpan.setAttribute('contenteditable', 'true');
+		argSpan.classList.add('focus:outline-none');
+		argSpan.innerHTML = ``;
 
-            console.log('rem arg');
-        }
+		let textnode: Text = new Text(arg);
+		argSpan.appendChild(textnode);
 
-        function decrementWorkingArg() {
-            workingChildIndex--;
-            placeCursorAtWorkingIndex();
-            console.log('dec arg');
-        }
+		workingChildIndex++;
+		if (workingChildIndex >= workingCommandLineDiv.children.length) {
+			workingCommandLineDiv.appendChild(argSpan);
+			placeCursorAtWorkingIndex(true);
+			console.log('new arg last!');
+		} else {
+			workingCommandLineDiv.insertBefore(
+				argSpan,
+				workingCommandLineDiv.children[workingChildIndex]
+			);
+			placeCursorAtWorkingIndex(true);
+			console.log('new arg before!');
+		}
+	}
 
-        function incrementWorkingArg() {
-            workingChildIndex++;
-            placeCursorAtWorkingIndex(true);
-            console.log('inc arg');
-        }
+	function removeWorkingArg() {
+		let childToRemove = workingCommandLineDiv.children[workingChildIndex] as Element;
+		workingCommandLineDiv.removeChild(childToRemove);
+		workingChildIndex--;
 
-        function splitCurrentChild(offset: number) {
-            let currentTextNode = getWorkingTextNodeOrCreateIfNull();
-            let currentNodeReplacementText = "";
-            let newArgText = "";
-            if(currentTextNode.textContent){
-                currentNodeReplacementText = currentTextNode.textContent?.substring(0, offset);
-                newArgText = currentTextNode.textContent?.substring(offset);
-                currentTextNode.textContent = currentNodeReplacementText;
-            }
-            appendNewArg(newArgText)   
-        }
+		placeCursorAtWorkingIndex();
 
-        function formatArgs() {
-            Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
-                if(index >= CommandIndex.ARGS){
-                    if(childspan.innerHTML.trim().startsWith('-')){
-                        childspan.classList.add('text-slate-400');
-                    } else {
-                        childspan.classList.remove('text-slate-400');
-                    }
-                }
-            });
-        }
-        
-        /// Event Handling! ///
-        function onKeyDown(event: KeyboardEvent) {
-            const selection = window.getSelection();
-            const range = selection?.getRangeAt(0);
-    
-          if (event.code === 'Enter') {
-            event.preventDefault(); // Prevent default new line behavior
-            const command = getCurrentCommand();
-            if (command) {
-              handleCommand(command);
-            } else {
-              appendNewCommandLine();
-            }
-          } else if (event.code === 'Space') {
-            if (range) {
-                let workingTextNode = getWorkingTextNodeOrCreateIfNull();
-                const cursorOffset = range.startOffset;
-                const spanTextLength = workingTextNode.textContent?.length!;
-                if(workingTextNode.textContent?.trim().length! > 0){
-                    if(cursorOffset < spanTextLength){
-                        console.log('split!');
-                        splitCurrentChild(cursorOffset);
-                    }else{
-                        appendNewArg();
-                    }
-                }
-            }
-          } else if (event.code === 'Backspace') {
-            if (range) {
-                if(workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 1){
-                    event.preventDefault();
-                    removeWorkingArg();
-                }
-            }
-          } else if (event.code === 'ArrowLeft') {
-            if (range) {
-                if(workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 1){
-                    event.preventDefault();
-                    decrementWorkingArg();
-                }
-            }
-          } else if (event.code === 'ArrowRight') {
-            if (range) {
-                let workingTextNode = getWorkingTextNodeOrCreateIfNull();
-                const cursorOffset = range.startOffset;
-                const spanTextLength = workingTextNode.textContent?.length!;
-                if(workingTextNode.textContent?.trim().length! > 0){
-                    if(cursorOffset >= spanTextLength){
-                        incrementWorkingArg();
-                    }
-                }
-            }
-          }else if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-            event.preventDefault(); //TODO
-          } else {
-            setTimeout(() => {formatArgs();}, 25);
-          }
-        }
-      
-        function getCurrentCommand(): string {
-          const lastChild = sverminalDiv.lastElementChild as HTMLElement;
-          return lastChild?.innerText.replace(prefix, '').trim() || '';
-        }
-    
-        onMount(() => {
-          appendNewCommandLine();
-        });
-    
-      </script>
-      
-      <div class="flex flex-col justify-center items-center">
-        <div 
-          bind:this={sverminalDiv} 
-          contenteditable="false" 
-          spellcheck="false" 
-          class="w-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 h-40 overflow-auto"
-          role="textbox"
-          aria-multiline="true"
-          tabindex="0"
-          on:keydown={onKeyDown}
-          on:click={() => {placeCursorAtWorkingIndex();}}
-        ></div>
-      </div>
-      
-      <style>
-        [contenteditable] {
-          white-space: pre-wrap;
-          outline: none;
-        }
-      </style>
+		console.log('rem arg');
+	}
+
+	function decrementWorkingArg() {
+		workingChildIndex--;
+		placeCursorAtWorkingIndex();
+		console.log('dec arg');
+	}
+
+	function incrementWorkingArg() {
+		workingChildIndex++;
+		placeCursorAtWorkingIndex(true);
+		console.log('inc arg');
+	}
+
+	function splitCurrentChild(offset: number) {
+		let currentTextNode = getWorkingTextNodeOrCreateIfNull();
+		let currentNodeReplacementText = '';
+		let newArgText = '';
+		if (currentTextNode.textContent) {
+			currentNodeReplacementText = currentTextNode.textContent?.substring(0, offset);
+			newArgText = currentTextNode.textContent?.substring(offset);
+			currentTextNode.textContent = currentNodeReplacementText;
+		}
+		appendNewArg(newArgText);
+	}
+
+	function formatArgs() {
+		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
+			if (index >= CommandIndex.ARGS) {
+				if (childspan.innerHTML.trim().startsWith('-')) {
+					childspan.classList.add('text-slate-400');
+				} else {
+					childspan.classList.remove('text-slate-400');
+				}
+			}
+		});
+	}
+
+	/// Event Handling! ///
+	function onKeyDown(event: KeyboardEvent) {
+		const selection = window.getSelection();
+		const range = selection?.getRangeAt(0);
+
+		if (event.code === 'Enter') {
+			event.preventDefault(); // Prevent default new line behavior
+			const command = getCurrentCommand();
+			if (command) {
+				handleCommand(command);
+			} else {
+				appendNewCommandLine();
+			}
+		} else if (event.code === 'Space') {
+			if (range) {
+				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
+				const cursorOffset = range.startOffset;
+				const spanTextLength = workingTextNode.textContent?.length!;
+				if (workingTextNode.textContent?.trim().length! > 0) {
+					if (cursorOffset < spanTextLength) {
+						console.log('split!');
+						splitCurrentChild(cursorOffset);
+					} else {
+						appendNewArg();
+					}
+				}
+			}
+		} else if (event.code === 'Backspace') {
+			if (range) {
+				if (workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 1) {
+					event.preventDefault();
+					removeWorkingArg();
+				}
+			}
+		} else if (event.code === 'ArrowLeft') {
+			if (range) {
+				if (workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 1) {
+					event.preventDefault();
+					decrementWorkingArg();
+				}
+			}
+		} else if (event.code === 'ArrowRight') {
+			if (range) {
+				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
+				const cursorOffset = range.startOffset;
+				const spanTextLength = workingTextNode.textContent?.length!;
+				if (workingTextNode.textContent?.trim().length! > 0) {
+					if (cursorOffset >= spanTextLength) {
+						incrementWorkingArg();
+					}
+				}
+			}
+		} else if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+			event.preventDefault(); //TODO
+		} else {
+			setTimeout(() => {
+				formatArgs();
+			}, 25);
+		}
+	}
+
+	function getCurrentCommand(): string {
+		const lastChild = sverminalDiv.lastElementChild as HTMLElement;
+		return lastChild?.innerText.replace(prefix, '').trim() || '';
+	}
+
+	onMount(() => {
+		appendNewCommandLine();
+	});
+</script>
+
+<div class="flex flex-col justify-center items-center">
+	<div
+		bind:this={sverminalDiv}
+		contenteditable="false"
+		spellcheck="false"
+		class="w-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 h-40 overflow-auto"
+		role="textbox"
+		aria-multiline="true"
+		tabindex="0"
+		on:keydown={onKeyDown}
+		on:click={() => {
+			placeCursorAtWorkingIndex();
+		}}
+	></div>
+</div>
+
+<style>
+	[contenteditable] {
+		white-space: pre-wrap;
+		outline: none;
+	}
+</style>
