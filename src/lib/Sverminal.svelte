@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
 	export enum CommandIndex {
-		PREFIX = 0,
+		PROMPT = 0,
 		COMMAND,
 		ARGS
 	}
@@ -12,7 +12,7 @@
 
 	export let processCommand: (command: string) => Promise<void>;
 
-	const prefix = 'sverm3.0$>';
+	const prompt = 'sverminal>';
 
 	let sverminalDiv: HTMLDivElement;
 	let workingCommandLineDiv: HTMLDivElement;
@@ -98,7 +98,7 @@
 		let promptSpan = document.createElement('span');
 		promptSpan.setAttribute('contenteditable', 'false');
 		promptSpan.classList.add('text-cyan-500', 'focus:outline-none');
-		promptSpan.innerHTML = `${prefix} `;
+		promptSpan.innerHTML = `${prompt} `;
 		workingCommandLineDiv.appendChild(promptSpan);
 	}
 
@@ -167,6 +167,8 @@
 
 		workingChildIndex = CommandIndex.COMMAND;
 		placeCursorAtWorkingIndex();
+
+		sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
 	}
 
 	function appendNewArg(arg: string = '') {
@@ -312,7 +314,7 @@
 
 	function getCurrentCommand(): string {
 		const lastChild = sverminalDiv.lastElementChild as HTMLElement;
-		return lastChild?.innerText.replace(prefix, '').trim() || '';
+		return lastChild?.innerText.replace(prompt, '').trim() || '';
 	}
 
 	onMount(() => {
