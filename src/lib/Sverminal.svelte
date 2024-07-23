@@ -352,13 +352,11 @@
 				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
 				const cursorOffset = range.startOffset;
 				const spanTextLength = workingTextNode.textContent?.length!;
-				if (workingTextNode.textContent?.trim().length! > 0) {
-					if (
-						cursorOffset >= spanTextLength &&
-						workingChildIndex < workingCommandLineDiv.children.length - 1
-					) {
-						incrementWorkingArg();
-					}
+				if (
+					cursorOffset >= spanTextLength &&
+					workingChildIndex < workingCommandLineDiv.children.length - 1
+				) {
+					incrementWorkingArg();
 				}
 			}
 		} else if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
