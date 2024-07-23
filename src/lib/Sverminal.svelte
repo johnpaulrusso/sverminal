@@ -8,8 +8,9 @@
 
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { responseStream, SverminalResponseType, type SverminalResponse } from './Stores.js';
 
-	export let processCommand: (command: string) => Promise<string>;
+	export let processCommand: (command: string) => Promise<void>;
 
 	const prefix = 'sverm3.0$>';
 
@@ -17,14 +18,80 @@
 	let workingCommandLineDiv: HTMLDivElement;
 	let workingChildIndex: number = CommandIndex.COMMAND;
 
+	responseStream.subscribe((value: SverminalResponse) => {
+		if (value != undefined) {
+			switch (value.type) {
+				case SverminalResponseType.ECHO:
+					{
+						svecho(value.message);
+					}
+					break;
+				case SverminalResponseType.WARNING:
+					{
+						svwarn(value.message);
+					}
+					break;
+				case SverminalResponseType.ERROR:
+					{
+						sverror(value.message);
+					}
+					break;
+				case SverminalResponseType.INFO:
+					{
+						svinfo(value.message);
+					}
+					break;
+			}
+		}
+	});
+
 	async function handleCommand(command: string) {
 		try {
 			await processCommand(command);
 		} catch (error) {
-			console.error('Command processing failed', error);
+			sverror(`Failed to process command: ${command}`);
 		} finally {
+			appendEmptyLine();
 			appendNewCommandLine();
 		}
+	}
+
+	function appendEmptyLine() {
+		let emptyLine = document.createElement('div');
+		emptyLine.setAttribute('contenteditable', 'false');
+		emptyLine.innerHTML = ` `;
+		sverminalDiv.appendChild(emptyLine);
+	}
+
+	function svecho(message: string) {
+		let echoLine = document.createElement('div');
+		echoLine.innerHTML = `${message}`;
+		echoLine.setAttribute('contenteditable', 'false');
+		sverminalDiv.appendChild(echoLine);
+	}
+
+	function svwarn(message: string) {
+		let echoLine = document.createElement('div');
+		echoLine.innerHTML = `${message}`;
+		echoLine.setAttribute('contenteditable', 'false');
+		echoLine.classList.add('text-orange-500');
+		sverminalDiv.appendChild(echoLine);
+	}
+
+	function sverror(message: string) {
+		let echoLine = document.createElement('div');
+		echoLine.innerHTML = `${message}`;
+		echoLine.setAttribute('contenteditable', 'false');
+		echoLine.classList.add('text-red-500');
+		sverminalDiv.appendChild(echoLine);
+	}
+
+	function svinfo(message: string) {
+		let echoLine = document.createElement('div');
+		echoLine.innerHTML = `${message}`;
+		echoLine.setAttribute('contenteditable', 'false');
+		echoLine.classList.add('text-blue-500');
+		sverminalDiv.appendChild(echoLine);
 	}
 
 	function appendPrompt() {
@@ -258,7 +325,7 @@
 		bind:this={sverminalDiv}
 		contenteditable="false"
 		spellcheck="false"
-		class="w-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 h-40 overflow-auto"
+		class="w-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 h-80 overflow-auto"
 		role="textbox"
 		aria-multiline="true"
 		tabindex="0"
