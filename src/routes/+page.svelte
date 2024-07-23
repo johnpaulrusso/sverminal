@@ -39,7 +39,10 @@
 				message: 'This message is part of the info test!'
 			});
 		} else {
-			return;
+			responseStream.set({
+				type: SverminalResponseType.ERROR,
+				message: `${method} is not recognized as a valid command.`
+			});
 		}
 	}
 </script>

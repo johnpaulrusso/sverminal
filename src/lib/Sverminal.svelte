@@ -131,6 +131,15 @@
 		selection?.addRange(range);
 	}
 
+	function placeCursorInTextNode(textnode: Text, offset: number) {
+		const range = document.createRange();
+		const selection = window.getSelection();
+		range.setStart(textnode, offset);
+		range.collapse(true);
+		selection?.removeAllRanges();
+		selection?.addRange(range);
+	}
+
 	function getWorkingTextNodeOrCreateIfNull(): Text {
 		const childspan = workingCommandLineDiv.children.item(workingChildIndex) as Element;
 		let textnode = childspan.firstChild as Text | null;
@@ -197,6 +206,11 @@
 
 	function removeWorkingArg() {
 		let childToRemove = workingCommandLineDiv.children[workingChildIndex] as Element;
+
+		if (childToRemove == null) {
+			console.log(`index: ${workingChildIndex}, length" ${workingCommandLineDiv.children.length}`);
+		}
+
 		workingCommandLineDiv.removeChild(childToRemove);
 		workingChildIndex--;
 
@@ -227,6 +241,53 @@
 			currentTextNode.textContent = currentNodeReplacementText;
 		}
 		appendNewArg(newArgText);
+	}
+
+	function insertSimulatedSpace() {
+		const workingTextNode = getWorkingTextNodeOrCreateIfNull();
+		workingTextNode.textContent = ` ${workingTextNode.textContent}`;
+	}
+
+	function insertText(text: string) {
+		const selection = window.getSelection();
+		const range = selection?.getRangeAt(0);
+		if (!range) {
+			return;
+		}
+
+		const cachedWorkingIndex = workingChildIndex;
+		const workingTextNode = getWorkingTextNodeOrCreateIfNull();
+		const workingTextLength = workingTextNode.textContent?.length!;
+		const isSplit = range.startOffset < workingTextLength;
+
+		const textparts = text.split(' ');
+
+		if (isSplit) {
+			splitCurrentChild(range.startOffset);
+			insertSimulatedSpace();
+			workingChildIndex = cachedWorkingIndex;
+		}
+
+		textparts.forEach((part: string, index, arr) => {
+			if (index == 0) {
+				const workingTextNode = getWorkingTextNodeOrCreateIfNull();
+				workingTextNode.textContent += part;
+			} else if (index < arr.length - 1 || !isSplit) {
+				appendNewArg(part);
+				insertSimulatedSpace();
+			} else {
+				//Prepend to the next arg... This behavior depends on if we split the current text or not.
+				workingChildIndex++;
+				const workingTextNodeToAppend = getWorkingTextNodeOrCreateIfNull();
+				workingTextNodeToAppend.textContent = `${part}${workingTextNodeToAppend.textContent?.trim()}`;
+				insertSimulatedSpace();
+				placeCursorInTextNode(workingTextNodeToAppend, part.length + 1);
+			}
+		});
+
+		if (!isSplit) {
+			placeCursorAtWorkingIndex();
+		}
 	}
 
 	function formatArgs() {
@@ -292,7 +353,10 @@
 				const cursorOffset = range.startOffset;
 				const spanTextLength = workingTextNode.textContent?.length!;
 				if (workingTextNode.textContent?.trim().length! > 0) {
-					if (cursorOffset >= spanTextLength) {
+					if (
+						cursorOffset >= spanTextLength &&
+						workingChildIndex < workingCommandLineDiv.children.length - 1
+					) {
 						incrementWorkingArg();
 					}
 				}
@@ -309,6 +373,17 @@
 			setTimeout(() => {
 				formatArgs();
 			}, 25);
+		}
+	}
+
+	function onPaste(event: ClipboardEvent) {
+		event.preventDefault();
+		if (event.clipboardData) {
+			const textToPaste = event.clipboardData.getData('text');
+			if (textToPaste.length > 0) {
+				console.log(textToPaste);
+				insertText(textToPaste);
+			}
 		}
 	}
 
@@ -335,6 +410,7 @@
 		on:click={() => {
 			placeCursorAtWorkingIndex();
 		}}
+		on:paste={onPaste}
 	></div>
 </div>
 
