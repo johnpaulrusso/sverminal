@@ -178,6 +178,7 @@
 		const range = selection?.getRangeAt(0);
 
 		if (event.code === 'Enter') {
+			// ENTER - Command Handling
 			event.preventDefault(); // Prevent default new line behavior
 			const command = getCurrentCommand();
 			if (command) {
@@ -186,13 +187,13 @@
 				appendNewCommandLine();
 			}
 		} else if (event.code === 'Space') {
+			// SPACE - Create new arguments. This may involve splitting existing commands/args.
 			if (range) {
 				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
 				const cursorOffset = range.startOffset;
 				const spanTextLength = workingTextNode.textContent?.length!;
 				if (workingTextNode.textContent?.trim().length! > 0) {
 					if (cursorOffset < spanTextLength) {
-						console.log('split!');
 						splitCurrentChild(cursorOffset);
 					} else {
 						appendNewArg();
@@ -200,6 +201,7 @@
 				}
 			}
 		} else if (event.code === 'Backspace') {
+			// BACKSPACE - Potentially remove the current arg and navigate to a previous arg.
 			if (range) {
 				if (workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 1) {
 					event.preventDefault();
@@ -207,6 +209,7 @@
 				}
 			}
 		} else if (event.code === 'ArrowLeft') {
+			// ARROWLEFT - Potentially navigate to a previous arg.
 			if (range) {
 				if (workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 1) {
 					event.preventDefault();
@@ -214,6 +217,7 @@
 				}
 			}
 		} else if (event.code === 'ArrowRight') {
+			// ARROWRIGHT- Potentially navigate to a later arg.
 			if (range) {
 				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
 				const cursorOffset = range.startOffset;
@@ -225,8 +229,14 @@
 				}
 			}
 		} else if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-			event.preventDefault(); //TODO
+			//ARROWUP/ARROWDOWN - Reserved for future feature to navigate command history.
+			event.preventDefault();
+			//TODO - navigate history.
+		} else if (event.code === 'Tab') {
+			//TAB - Reserved for future feature to autocomplete text.
+			//TODO - autocomplete.
 		} else {
+			//ELSE - For now simply format args.
 			setTimeout(() => {
 				formatArgs();
 			}, 25);
