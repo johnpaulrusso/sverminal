@@ -10,9 +10,13 @@
 	import { onMount } from 'svelte';
 	import { responseStream, SverminalResponseType, type SverminalResponse } from './Stores.js';
 
-	export let processCommand: (command: string) => Promise<void>;
+    import { defaultConfig, type Config } from '$lib/config/defaultConfig.js'
 
-	const prompt = 'sverminal>';
+	export let processCommand: (command: string) => Promise<void>;
+    export let promptPrefix = "sverminal"; 
+    export let config: Config = defaultConfig;
+
+    $: promptText = `${promptPrefix}${config.promptSuffix} `
 
 	let sverminalDiv: HTMLDivElement;
 	let workingCommandLineDiv: HTMLDivElement;
@@ -59,53 +63,55 @@
 	function appendEmptyLine() {
 		let emptyLine = document.createElement('div');
 		emptyLine.setAttribute('contenteditable', 'false');
+        emptyLine.classList.add(...config.style.text);
 		emptyLine.innerHTML = ` `;
 		sverminalDiv.appendChild(emptyLine);
 	}
 
 	function svecho(message: string) {
-		let echoLine = document.createElement('div');
-		echoLine.innerHTML = `${message}`;
-		echoLine.setAttribute('contenteditable', 'false');
-		sverminalDiv.appendChild(echoLine);
+		let line = document.createElement('div');
+		line.innerHTML = `${message}`;
+		line.setAttribute('contenteditable', 'false');
+        line.classList.add(...config.style.text);
+		sverminalDiv.appendChild(line);
 	}
 
 	function svwarn(message: string) {
-		let echoLine = document.createElement('div');
-		echoLine.innerHTML = `${message}`;
-		echoLine.setAttribute('contenteditable', 'false');
-		echoLine.classList.add('text-orange-500');
-		sverminalDiv.appendChild(echoLine);
+		let line = document.createElement('div');
+		line.innerHTML = `${message}`;
+		line.setAttribute('contenteditable', 'false');
+		line.classList.add(...config.style.warn);
+		sverminalDiv.appendChild(line);
 	}
 
 	function sverror(message: string) {
-		let echoLine = document.createElement('div');
-		echoLine.innerHTML = `${message}`;
-		echoLine.setAttribute('contenteditable', 'false');
-		echoLine.classList.add('text-red-500');
-		sverminalDiv.appendChild(echoLine);
+		let line = document.createElement('div');
+		line.innerHTML = `${message}`;
+		line.setAttribute('contenteditable', 'false');
+		line.classList.add(...config.style.error);
+		sverminalDiv.appendChild(line);
 	}
 
 	function svinfo(message: string) {
-		let echoLine = document.createElement('div');
-		echoLine.innerHTML = `${message}`;
-		echoLine.setAttribute('contenteditable', 'false');
-		echoLine.classList.add('text-blue-500');
-		sverminalDiv.appendChild(echoLine);
+		let line = document.createElement('div');
+		line.innerHTML = `${message}`;
+		line.setAttribute('contenteditable', 'false');
+		line.classList.add(...config.style.info);
+		sverminalDiv.appendChild(line);
 	}
 
 	function appendPrompt() {
 		let promptSpan = document.createElement('span');
 		promptSpan.setAttribute('contenteditable', 'false');
-		promptSpan.classList.add('text-cyan-500', 'focus:outline-none');
-		promptSpan.innerHTML = `${prompt} `;
+		promptSpan.classList.add(...config.style.prompt, 'focus:outline-none');
+		promptSpan.innerHTML = promptText;
 		workingCommandLineDiv.appendChild(promptSpan);
 	}
 
 	function appendEmptyCommand() {
 		let commandSpan = document.createElement('span');
 		commandSpan.setAttribute('contenteditable', 'true');
-		commandSpan.classList.add('text-yellow-500', 'focus:outline-none');
+		commandSpan.classList.add(...config.style.command, 'focus:outline-none');
 
 		let emptyTextnode: Text = new Text('');
 		commandSpan.appendChild(emptyTextnode);
@@ -320,9 +326,11 @@
 		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
 			if (index >= CommandIndex.ARGS) {
 				if (childspan.innerHTML.trim().startsWith('-')) {
-					childspan.classList.add('text-slate-400');
+					childspan.classList.add(...config.style.flags);
+                    childspan.classList.remove(...config.style.text);
 				} else {
-					childspan.classList.remove('text-slate-400');
+                    childspan.classList.add(...config.style.text);
+					childspan.classList.remove(...config.style.flags);
 				}
 			}
 		});
@@ -422,7 +430,7 @@
 
 	function getCurrentCommand(): string {
 		const lastChild = sverminalDiv.lastElementChild as HTMLElement;
-		return lastChild?.innerText.replace(prompt, '').trim() || '';
+		return lastChild?.innerText.replace(promptText, '').trim() || '';
 	}
 
 	onMount(() => {
