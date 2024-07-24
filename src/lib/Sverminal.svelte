@@ -243,6 +243,21 @@
 		appendNewArg(newArgText);
 	}
 
+	function joinCurrentChildWithPreviousChild() {
+		let workingTextNode = getWorkingTextNodeOrCreateIfNull();
+		const textToJoin = workingTextNode.textContent;
+
+		removeWorkingArg();
+
+		workingTextNode = getWorkingTextNodeOrCreateIfNull();
+		workingTextNode.textContent! += textToJoin?.trim();
+
+		placeCursorInTextNode(
+			workingTextNode,
+			workingTextNode.textContent!.length - textToJoin?.trim().length!
+		);
+	}
+
 	function insertSimulatedSpace() {
 		const workingTextNode = getWorkingTextNodeOrCreateIfNull();
 		workingTextNode.textContent = ` ${workingTextNode.textContent}`;
@@ -333,9 +348,15 @@
 		} else if (event.code === 'Backspace') {
 			// BACKSPACE - Potentially remove the current arg and navigate to a previous arg.
 			if (range) {
+				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
+				const spanTextLength = workingTextNode.textContent?.length!;
 				if (workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 1) {
 					event.preventDefault();
-					removeWorkingArg();
+					if (spanTextLength <= 1) {
+						removeWorkingArg();
+					} else {
+						joinCurrentChildWithPreviousChild();
+					}
 				}
 			}
 		} else if (event.code === 'ArrowLeft') {
