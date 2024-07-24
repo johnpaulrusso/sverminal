@@ -168,6 +168,11 @@
 
 	function appendNewCommandLine() {
 		workingCommandLineDiv = document.createElement('div');
+		workingCommandLineDiv.setAttribute('contenteditable', 'true');
+		workingCommandLineDiv.classList.add('focus:outline-none');
+		workingCommandLineDiv.onclick = (event) => {
+			event.stopPropagation();
+		};
 
 		appendPrompt();
 		appendEmptyCommand();
@@ -305,6 +310,12 @@
 		}
 	}
 
+	function backspaceFirstCommandCharacter() {
+		const commandNode = getWorkingTextNodeOrCreateIfNull();
+		commandNode.textContent = '';
+		placeCursorAtWorkingIndex();
+	}
+
 	function formatArgs() {
 		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
 			if (index >= CommandIndex.ARGS) {
@@ -357,6 +368,9 @@
 					} else {
 						joinCurrentChildWithPreviousChild();
 					}
+				} else if (workingChildIndex == CommandIndex.COMMAND && range.startOffset <= 1) {
+					event.preventDefault();
+					backspaceFirstCommandCharacter();
 				}
 			}
 		} else if (event.code === 'ArrowLeft') {
