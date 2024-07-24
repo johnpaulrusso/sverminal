@@ -11,6 +11,7 @@
 	import { responseStream, SverminalResponseType, type SverminalResponse } from './Stores.js';
 
     import { defaultConfig, type Config } from '$lib/config/defaultConfig.js'
+    import * as history from '$lib/history.js'
 
 	export let processCommand: (command: string) => Promise<void>;
     export let promptPrefix = "sverminal"; 
@@ -21,6 +22,7 @@
 	let sverminalDiv: HTMLDivElement;
 	let workingCommandLineDiv: HTMLDivElement;
 	let workingChildIndex: number = CommandIndex.COMMAND;
+    let historyIndex = -1;
 
 	responseStream.subscribe((value: SverminalResponse) => {
 		if (value != undefined) {
@@ -57,6 +59,9 @@
 		} finally {
 			appendEmptyLine();
 			appendNewCommandLine();
+
+            //Regardless of the result, save the command in history.
+            history.push(command);
 		}
 	}
 
@@ -108,12 +113,12 @@
 		workingCommandLineDiv.appendChild(promptSpan);
 	}
 
-	function appendEmptyCommand() {
+	function appendCommand(command: string = '') {
 		let commandSpan = document.createElement('span');
 		commandSpan.setAttribute('contenteditable', 'true');
 		commandSpan.classList.add(...config.style.command, 'focus:outline-none');
 
-		let emptyTextnode: Text = new Text('');
+		let emptyTextnode: Text = new Text(command);
 		commandSpan.appendChild(emptyTextnode);
 
 		workingCommandLineDiv.appendChild(commandSpan);
@@ -181,7 +186,7 @@
 		};
 
 		appendPrompt();
-		appendEmptyCommand();
+		appendCommand('');
 
 		sverminalDiv.appendChild(workingCommandLineDiv);
 
@@ -336,12 +341,53 @@
 		});
 	}
 
+    function navigateHistory(reverse: boolean = false) {
+        
+        if(reverse && historyIndex == 0 || !reverse && historyIndex >= history.length() - 1){
+            return;
+        }
+        else if(reverse){
+            --historyIndex;
+        }else{
+            ++historyIndex
+        }
+        
+        let historicalCommand = history.get(historyIndex);
+        
+        if(historicalCommand === ''){
+            return;
+        }
+
+        let parts = historicalCommand.split(' ').filter(part => part != ' ');
+        let command = parts.at(0);
+        let args = parts.slice(1);
+
+        //Clear the command! This should probably be its own function.
+        for(; workingChildIndex > 0; --workingChildIndex){
+            let childToRemove = workingCommandLineDiv.children.item(workingChildIndex);
+            if(childToRemove){
+                workingCommandLineDiv.removeChild(childToRemove);
+            }
+        }
+        workingChildIndex = CommandIndex.COMMAND;
+        appendCommand(command);
+        args.forEach(arg => {
+            appendNewArg(arg);
+            insertSimulatedSpace();
+        });
+        formatArgs();
+        workingChildIndex = parts.length;
+        placeCursorAtWorkingIndex();
+
+    }
+
 	/// Event Handling! ///
 	function onKeyDown(event: KeyboardEvent) {
 		const selection = window.getSelection();
 		const range = selection?.getRangeAt(0);
 
 		if (event.code === 'Enter') {
+            historyIndex = -1;
 			// ENTER - Command Handling
 			event.preventDefault(); // Prevent default new line behavior
 			const command = getCurrentCommand();
@@ -352,6 +398,7 @@
 			}
 		} else if (event.code === 'Space') {
 			// SPACE - Create new arguments. This may involve splitting existing commands/args.
+            historyIndex = -1;
 			if (range) {
 				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
 				const cursorOffset = range.startOffset;
@@ -366,6 +413,7 @@
 			}
 		} else if (event.code === 'Backspace') {
 			// BACKSPACE - Potentially remove the current arg and navigate to a previous arg.
+            historyIndex = -1;
 			if (range) {
 				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
 				const spanTextLength = workingTextNode.textContent?.length!;
@@ -406,6 +454,12 @@
 			//ARROWUP/ARROWDOWN - Reserved for future feature to navigate command history.
 			event.preventDefault();
 			//TODO - navigate history.
+
+            //replace the current command line with next item in history!
+            if(config.history.enabled){
+                navigateHistory(event.code === 'ArrowDown');
+            }
+
 		} else if (event.code === 'Tab') {
 			//TAB - Reserved for future feature to autocomplete text.
 			//TODO - autocomplete.
@@ -418,6 +472,7 @@
 	}
 
 	function onPaste(event: ClipboardEvent) {
+        historyIndex = -1;
 		event.preventDefault();
 		if (event.clipboardData) {
 			const textToPaste = event.clipboardData.getData('text');

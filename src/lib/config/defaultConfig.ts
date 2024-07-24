@@ -8,6 +8,11 @@ export const defaultConfig = {
         error: ['text-red-400'],
         warn: ['text-yellow-400'],
         text: ['text-slate-50'],
+    },
+    history: {
+        enabled: true,
+        method: "memory", //memory (default), sessionstorage (tbd), localstorage (tbd)
+        limit: 3,
     }
 }
 
