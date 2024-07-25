@@ -11,7 +11,7 @@
 	import { responseStream, SverminalResponseType, type SverminalResponse } from './Stores.js';
 
     import { defaultConfig, type Config } from '$lib/config/defaultConfig.js'
-    import { createCommandHistory } from './history.js';
+    import { createCommandHistory } from '$lib/history/factory.js'
 
 	export let processCommand: (command: string) => Promise<void>;
     export let promptPrefix = "sverminal"; 
