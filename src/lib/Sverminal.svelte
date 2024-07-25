@@ -60,12 +60,11 @@
 
 	async function handleCommand(command: string) {
 		try {
-			lockInput();
+			lockCommand();
 			await processCommand(command);
 		} catch (error) {
 			sverror(`Failed to process command: ${command} - Error: ${error}`);
 		} finally {
-			unlockInput();
 			if (config.newlineBetweenCommands) {
 				appendEmptyLine();
 			}
@@ -336,21 +335,12 @@
 		placeCursorAtWorkingIndex();
 	}
 
-	function lockInput() {
+	function lockCommand() {
 		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
 			if (index >= CommandIndex.COMMAND) {
 				childspan.setAttribute('contenteditable', 'false');
 			}
 		});
-	}
-
-	function unlockInput() {
-		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
-			if (index >= CommandIndex.COMMAND) {
-				childspan.setAttribute('contenteditable', 'true');
-			}
-		});
-		placeCursorAtWorkingIndex();
 	}
 
 	function formatArgs() {
@@ -508,6 +498,15 @@
 		}
 	}
 
+    function onClick(){
+        //Prevent automatic cursor movement if the user has a selection.
+        const selection = window.getSelection();
+        if(selection){
+            return;
+        }
+        placeCursorAtWorkingIndex();
+    }
+
 	function getCurrentCommand(): string {
 		const lastChild = sverminalDiv.lastElementChild as HTMLElement;
 		return lastChild?.innerText.replace(promptText, '').trim() || '';
@@ -521,16 +520,14 @@
 <div class="flex flex-col justify-center items-center">
 	<div
 		bind:this={sverminalDiv}
-		contenteditable="false"
+		contenteditable="true"
 		spellcheck="false"
 		class="w-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 h-80 overflow-auto"
 		role="textbox"
 		aria-multiline="true"
 		tabindex="0"
 		on:keydown={onKeyDown}
-		on:click={() => {
-			placeCursorAtWorkingIndex();
-		}}
+		on:click={onClick}
 		on:paste={onPaste}
 	></div>
 </div>
