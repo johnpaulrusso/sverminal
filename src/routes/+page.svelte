@@ -114,5 +114,5 @@
 </div>
 
 <div class="p-4">
-	<Sverminal {processCommand} writer={sverminalWriter} />
+	<Sverminal processor={processCommand} writer={sverminalWriter} />
 </div>

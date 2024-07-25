@@ -17,7 +17,7 @@
 		type SverminalWriter
 	} from './writer/writer.js';
 
-	export let processCommand: (command: string) => Promise<void>;
+	export let processor: (command: string) => Promise<void>;
 	export let promptPrefix = 'sverminal';
 	export let config: Config = defaultConfig;
 	export let writer: SverminalWriter;
@@ -61,7 +61,7 @@
 	async function handleCommand(command: string) {
 		try {
 			lockCommand();
-			await processCommand(command);
+			await processor(command);
 		} catch (error) {
 			sverror(`Failed to process command: ${command} - Error: ${error}`);
 		} finally {
