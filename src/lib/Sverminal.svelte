@@ -59,7 +59,9 @@
 		} catch (error) {
 			sverror(`Failed to process command: ${command}`);
 		} finally {
-			appendEmptyLine();
+            if(config.newlineBetweenCommands){
+                appendEmptyLine();
+            }
 			appendNewCommandLine();
 
             //Regardless of the result, save the command in history.

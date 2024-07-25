@@ -13,7 +13,8 @@ export const defaultConfig = {
         enabled: true,
         method: "memory", //memory (default), sessionstorage (tbd), localstorage (tbd)
         limit: 10,
-    }
+    },
+    newlineBetweenCommands: false,
 }
 
 export type Config = typeof defaultConfig;
