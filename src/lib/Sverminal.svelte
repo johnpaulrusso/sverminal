@@ -8,14 +8,15 @@
 
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { responseStream, SverminalResponseType, type SverminalResponse } from './Stores.js';
 
     import { defaultConfig, type Config } from '$lib/config/defaultConfig.js'
     import { createCommandHistory } from '$lib/history/factory.js'
+	import { SverminalResponseType, type SverminalResponse, type SverminalWriter } from './writer/writer.js';
 
 	export let processCommand: (command: string) => Promise<void>;
     export let promptPrefix = "sverminal"; 
     export let config: Config = defaultConfig;
+    export let writer: SverminalWriter;
 
     $: promptText = `${promptPrefix}${config.promptSuffix} `
 
@@ -26,7 +27,7 @@
 
     let commandHistory = createCommandHistory();
 
-	responseStream.subscribe((value: SverminalResponse) => {
+	writer.subscribe((value: SverminalResponse) => {
 		if (value != undefined) {
 			switch (value.type) {
 				case SverminalResponseType.ECHO:
