@@ -1,12 +1,12 @@
 export abstract class CommandHistoryStrategy {
-    readonly limit: number
+	readonly limit: number;
 
-    constructor(limit: number) {
-        this.limit = limit
-    }
+	constructor(limit: number) {
+		this.limit = limit;
+	}
 
-    abstract push(command: string): void;
-    abstract get(index: number): string;
-    abstract length(): number;
-    abstract clear(): void;
+	abstract push(command: string): void;
+	abstract get(index: number): string;
+	abstract length(): number;
+	abstract clear(): void;
 }

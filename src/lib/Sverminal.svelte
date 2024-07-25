@@ -9,23 +9,27 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-    import { defaultConfig, type Config } from '$lib/config/defaultConfig.js'
-    import { createCommandHistory } from '$lib/history/factory.js'
-	import { SverminalResponseType, type SverminalResponse, type SverminalWriter } from './writer/writer.js';
+	import { defaultConfig, type Config } from '$lib/config/defaultConfig.js';
+	import { createCommandHistory } from '$lib/history/factory.js';
+	import {
+		SverminalResponseType,
+		type SverminalResponse,
+		type SverminalWriter
+	} from './writer/writer.js';
 
 	export let processCommand: (command: string) => Promise<void>;
-    export let promptPrefix = "sverminal"; 
-    export let config: Config = defaultConfig;
-    export let writer: SverminalWriter;
+	export let promptPrefix = 'sverminal';
+	export let config: Config = defaultConfig;
+	export let writer: SverminalWriter;
 
-    $: promptText = `${promptPrefix}${config.promptSuffix} `
+	$: promptText = `${promptPrefix}${config.promptSuffix} `;
 
 	let sverminalDiv: HTMLDivElement;
 	let workingCommandLineDiv: HTMLDivElement;
 	let workingChildIndex: number = CommandIndex.COMMAND;
-    let historyIndex = -1;
+	let historyIndex = -1;
 
-    let commandHistory = createCommandHistory();
+	let commandHistory = createCommandHistory();
 
 	writer.subscribe((value: SverminalResponse) => {
 		if (value != undefined) {
@@ -56,27 +60,26 @@
 
 	async function handleCommand(command: string) {
 		try {
-            lockInput();
+			lockInput();
 			await processCommand(command);
 		} catch (error) {
-			sverror(`Failed to process command: ${command}`);
+			sverror(`Failed to process command: ${command} - Error: ${error}`);
 		} finally {
-            unlockInput();
-            if(config.newlineBetweenCommands){
-                appendEmptyLine();
-            }
+			unlockInput();
+			if (config.newlineBetweenCommands) {
+				appendEmptyLine();
+			}
 			appendNewCommandLine();
-            
 
-            //Regardless of the result, save the command in history.
-            commandHistory.push(command);
+			//Regardless of the result, save the command in history.
+			commandHistory.push(command);
 		}
 	}
 
 	function appendEmptyLine() {
 		let emptyLine = document.createElement('div');
 		emptyLine.setAttribute('contenteditable', 'false');
-        emptyLine.classList.add(...config.style.text);
+		emptyLine.classList.add(...config.style.text);
 		emptyLine.innerHTML = ` `;
 		sverminalDiv.appendChild(emptyLine);
 	}
@@ -85,7 +88,7 @@
 		let line = document.createElement('div');
 		line.innerHTML = `${message}`;
 		line.setAttribute('contenteditable', 'false');
-        line.classList.add(...config.style.text);
+		line.classList.add(...config.style.text);
 		sverminalDiv.appendChild(line);
 	}
 
@@ -135,7 +138,7 @@
 	function placeCursorAtEndOfTextNode(textnode: Text) {
 		const range = document.createRange();
 		const selection = window.getSelection();
-		range.setStart(textnode, textnode.textContent?.length!);
+		range.setStart(textnode, textnode.textContent?.length ?? 0);
 		range.collapse(true);
 		selection?.removeAllRanges();
 		selection?.addRange(range);
@@ -276,10 +279,8 @@
 		workingTextNode = getWorkingTextNodeOrCreateIfNull();
 		workingTextNode.textContent! += textToJoin?.trim();
 
-		placeCursorInTextNode(
-			workingTextNode,
-			workingTextNode.textContent!.length - textToJoin?.trim().length!
-		);
+		let offset = (workingTextNode.textContent?.length ?? 0) - (textToJoin?.trim().length ?? 0);
+		placeCursorInTextNode(workingTextNode, offset);
 	}
 
 	function insertSimulatedSpace() {
@@ -296,7 +297,7 @@
 
 		const cachedWorkingIndex = workingChildIndex;
 		const workingTextNode = getWorkingTextNodeOrCreateIfNull();
-		const workingTextLength = workingTextNode.textContent?.length!;
+		const workingTextLength = workingTextNode.textContent?.length ?? 0;
 		const isSplit = range.startOffset < workingTextLength;
 
 		const textparts = text.split(' ');
@@ -335,76 +336,76 @@
 		placeCursorAtWorkingIndex();
 	}
 
-    function lockInput() {
-        Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
-            if(index >= CommandIndex.COMMAND){
-                childspan.setAttribute('contenteditable', 'false');
-            }
-        })
-    }
+	function lockInput() {
+		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
+			if (index >= CommandIndex.COMMAND) {
+				childspan.setAttribute('contenteditable', 'false');
+			}
+		});
+	}
 
-    function unlockInput() {
-        Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
-            if(index >= CommandIndex.COMMAND){
-                childspan.setAttribute('contenteditable', 'true');
-            }
-        })
-        placeCursorAtWorkingIndex();
-    }
+	function unlockInput() {
+		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
+			if (index >= CommandIndex.COMMAND) {
+				childspan.setAttribute('contenteditable', 'true');
+			}
+		});
+		placeCursorAtWorkingIndex();
+	}
 
 	function formatArgs() {
 		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
 			if (index >= CommandIndex.ARGS) {
 				if (childspan.innerHTML.trim().startsWith('-')) {
 					childspan.classList.add(...config.style.flags);
-                    childspan.classList.remove(...config.style.text);
+					childspan.classList.remove(...config.style.text);
 				} else {
-                    childspan.classList.add(...config.style.text);
+					childspan.classList.add(...config.style.text);
 					childspan.classList.remove(...config.style.flags);
 				}
 			}
 		});
 	}
 
-    function navigateHistory(reverse: boolean = false) {
-        
-        if(reverse && historyIndex == 0 || !reverse && historyIndex >= commandHistory.length() - 1){
-            return;
-        }
-        else if(reverse){
-            --historyIndex;
-        }else{
-            ++historyIndex
-        }
-        
-        let historicalCommand = commandHistory.get(historyIndex);
-        
-        if(historicalCommand === ''){
-            return;
-        }
+	function navigateHistory(reverse: boolean = false) {
+		if (
+			(reverse && historyIndex == 0) ||
+			(!reverse && historyIndex >= commandHistory.length() - 1)
+		) {
+			return;
+		} else if (reverse) {
+			--historyIndex;
+		} else {
+			++historyIndex;
+		}
 
-        let parts = historicalCommand.split(' ').filter(part => part != ' ');
-        let command = parts.at(0);
-        let args = parts.slice(1);
+		let historicalCommand = commandHistory.get(historyIndex);
 
-        //Clear the command! This should probably be its own function.
-        for(; workingChildIndex > 0; --workingChildIndex){
-            let childToRemove = workingCommandLineDiv.children.item(workingChildIndex);
-            if(childToRemove){
-                workingCommandLineDiv.removeChild(childToRemove);
-            }
-        }
-        workingChildIndex = CommandIndex.COMMAND;
-        appendCommand(command);
-        args.forEach(arg => {
-            appendNewArg(arg);
-            insertSimulatedSpace();
-        });
-        formatArgs();
-        workingChildIndex = parts.length;
-        placeCursorAtWorkingIndex();
+		if (historicalCommand === '') {
+			return;
+		}
 
-    }
+		let parts = historicalCommand.split(' ').filter((part) => part != ' ');
+		let command = parts.at(0);
+		let args = parts.slice(1);
+
+		//Clear the command! This should probably be its own function.
+		for (; workingChildIndex > 0; --workingChildIndex) {
+			let childToRemove = workingCommandLineDiv.children.item(workingChildIndex);
+			if (childToRemove) {
+				workingCommandLineDiv.removeChild(childToRemove);
+			}
+		}
+		workingChildIndex = CommandIndex.COMMAND;
+		appendCommand(command);
+		args.forEach((arg) => {
+			appendNewArg(arg);
+			insertSimulatedSpace();
+		});
+		formatArgs();
+		workingChildIndex = parts.length;
+		placeCursorAtWorkingIndex();
+	}
 
 	/// Event Handling! ///
 	function onKeyDown(event: KeyboardEvent) {
@@ -412,7 +413,7 @@
 		const range = selection?.getRangeAt(0);
 
 		if (event.code === 'Enter') {
-            historyIndex = -1;
+			historyIndex = -1;
 			// ENTER - Command Handling
 			event.preventDefault(); // Prevent default new line behavior
 			const command = getCurrentCommand();
@@ -423,12 +424,12 @@
 			}
 		} else if (event.code === 'Space') {
 			// SPACE - Create new arguments. This may involve splitting existing commands/args.
-            historyIndex = -1;
+			historyIndex = -1;
 			if (range) {
 				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
 				const cursorOffset = range.startOffset;
-				const spanTextLength = workingTextNode.textContent?.length!;
-				if (workingTextNode.textContent?.trim().length! > 0) {
+				const spanTextLength = workingTextNode.textContent?.length ?? 0;
+				if (workingTextNode.textContent && workingTextNode.textContent.trim().length! > 0) {
 					if (cursorOffset < spanTextLength) {
 						splitCurrentChild(cursorOffset);
 					} else {
@@ -438,10 +439,10 @@
 			}
 		} else if (event.code === 'Backspace') {
 			// BACKSPACE - Potentially remove the current arg and navigate to a previous arg.
-            historyIndex = -1;
+			historyIndex = -1;
 			if (range) {
 				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
-				const spanTextLength = workingTextNode.textContent?.length!;
+				const spanTextLength = workingTextNode.textContent?.length ?? 0;
 				if (workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 1) {
 					event.preventDefault();
 					if (spanTextLength <= 1) {
@@ -467,7 +468,7 @@
 			if (range) {
 				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
 				const cursorOffset = range.startOffset;
-				const spanTextLength = workingTextNode.textContent?.length!;
+				const spanTextLength = workingTextNode.textContent?.length ?? 0;
 				if (
 					cursorOffset >= spanTextLength &&
 					workingChildIndex < workingCommandLineDiv.children.length - 1
@@ -480,11 +481,10 @@
 			event.preventDefault();
 			//TODO - navigate history.
 
-            //replace the current command line with next item in history!
-            if(config.history.enabled){
-                navigateHistory(event.code === 'ArrowDown');
-            }
-
+			//replace the current command line with next item in history!
+			if (config.history.enabled) {
+				navigateHistory(event.code === 'ArrowDown');
+			}
 		} else if (event.code === 'Tab') {
 			//TAB - Reserved for future feature to autocomplete text.
 			//TODO - autocomplete.
@@ -497,7 +497,7 @@
 	}
 
 	function onPaste(event: ClipboardEvent) {
-        historyIndex = -1;
+		historyIndex = -1;
 		event.preventDefault();
 		if (event.clipboardData) {
 			const textToPaste = event.clipboardData.getData('text');
