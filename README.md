@@ -1,6 +1,8 @@
 # README
 Sverminal is a Svelte component that provides an terminal emulator to be used in the browser. This component relies on Tailwind CSS for its styling.
 
+Try out the [Live Demo!](https://sverminal.io)
+
 ### Prerequisites
 Svelte and Tailwind CSS installed in your project.
 
