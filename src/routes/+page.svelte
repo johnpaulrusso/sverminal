@@ -1,7 +1,80 @@
 <script lang="ts">
 	import '../app.css';
 	import Sverminal from '$lib/Sverminal.svelte';
-	import { responseStream, SverminalResponseType } from '$lib/Stores.js';
+	import { SverminalWriter } from '$lib/writer/writer.js';
+
+	let sverminalWriter = new SverminalWriter();
+
+	function echo(args: string[]) {
+		if (args.length == 0) {
+			sverminalWriter.error('echo requires at least one argument. Usage: echo message');
+		} else {
+			const message = args.join(' ');
+			sverminalWriter.echo(message);
+		}
+	}
+
+	function warn(args: string[]) {
+		if (args.length == 0) {
+			sverminalWriter.error('warn requires at least one argument. Usage: warn message');
+		} else {
+			const message = args.join(' ');
+			sverminalWriter.warn(message);
+		}
+	}
+
+	function error(args: string[]) {
+		if (args.length == 0) {
+			sverminalWriter.error('error requires at least one argument. Usage: error message');
+		} else {
+			const message = args.join(' ');
+			sverminalWriter.error(message);
+		}
+	}
+
+	function info(args: string[]) {
+		if (args.length == 0) {
+			sverminalWriter.error('info requires at least one argument. Usage: info <message>');
+		} else {
+			const message = args.join(' ');
+			sverminalWriter.info(message);
+		}
+	}
+
+	const delay = (delayInms: number) => {
+		return new Promise((resolve) => setTimeout(resolve, delayInms));
+	};
+
+	async function countdown(args: string[]) {
+		if (args.length != 1) {
+			sverminalWriter.error(
+				'countdown requires a positive integer argument between and including 1 and 99. Usage: countdown number'
+			);
+			return;
+		}
+
+		const arg = args[0];
+		const regex = /^\s*[0-9]{1,2}\s*$/;
+		if (!regex.test(arg)) {
+			sverminalWriter.error(
+				'countdown requires a positive integer argument between and including 1 and 99. Usage: countdown number'
+			);
+			return;
+		}
+
+		const start = parseInt(arg[0]);
+		if (start < 1 || 99 < start) {
+			sverminalWriter.error(
+				'countdown requires a positive integer argument between and including 1 and 99. Usage: countdown number'
+			);
+			return;
+		}
+
+		for (let i = start; i > 0; --i) {
+			sverminalWriter.echo(`countdown: ${i}`);
+			await delay(1000);
+		}
+	}
 
 	async function processCommand(command: string): Promise<void> {
 		// Your command processing logic here
@@ -18,40 +91,28 @@
 		const args = commandParts.length > 0 ? commandParts.slice(1) : [];
 
 		if (method === 'help') {
+			sverminalWriter.info('TODO - Implement the help command!');
 		} else if (method === 'echo') {
-			responseStream.set({
-				type: SverminalResponseType.ECHO,
-				message: 'This message is part of the echo test! TODO - only respond with args!'
-			});
+			echo(args);
 		} else if (method === 'warn') {
-			responseStream.set({
-				type: SverminalResponseType.WARNING,
-				message: 'This warning is an intential result of the warn command test!'
-			});
+			warn(args);
 		} else if (method === 'error') {
-			responseStream.set({
-				type: SverminalResponseType.ERROR,
-				message: 'This error is an intential result of the error command test!'
-			});
+			error(args);
 		} else if (method === 'info') {
-			responseStream.set({
-				type: SverminalResponseType.INFO,
-				message: 'This message is part of the info test!'
-			});
+			info(args);
+		} else if (method === 'countdown') {
+			await countdown(args);
 		} else {
-			responseStream.set({
-				type: SverminalResponseType.ERROR,
-				message: `${method} is not recognized as a valid command.`
-			});
+			sverminalWriter.error(`${method} is not recognized as a valid command.`);
 		}
 	}
 </script>
 
-<h1>Welcome to the Sverminal demo</h1>
-<!--
+<div class="w-full flex flex-col justify-center items-center text-center p-4 md:p-8 gap-2 md:gap-4">
+	<h1 class="text-5xl md:text-7xl font-mono font-bold">SVERMINAL</h1>
+	<h3 class="text-sm md:text-base font-mono">Terminal emulator built on Svelte and Tailwind</h3>
+</div>
+
 <div class="p-4">
-<Sverminal {processCommand} />
-</div>-->
-<div class="p-4">
-	<Sverminal {processCommand} />
+	<Sverminal {processCommand} writer={sverminalWriter} />
 </div>

@@ -8,17 +8,30 @@
 
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { responseStream, SverminalResponseType, type SverminalResponse } from './Stores.js';
+
+	import { defaultConfig, type Config } from '$lib/config/defaultConfig.js';
+	import { createCommandHistory } from '$lib/history/factory.js';
+	import {
+		SverminalResponseType,
+		type SverminalResponse,
+		type SverminalWriter
+	} from './writer/writer.js';
 
 	export let processCommand: (command: string) => Promise<void>;
+	export let promptPrefix = 'sverminal';
+	export let config: Config = defaultConfig;
+	export let writer: SverminalWriter;
 
-	const prompt = 'sverminal>';
+	$: promptText = `${promptPrefix}${config.promptSuffix} `;
 
 	let sverminalDiv: HTMLDivElement;
 	let workingCommandLineDiv: HTMLDivElement;
 	let workingChildIndex: number = CommandIndex.COMMAND;
+	let historyIndex = -1;
 
-	responseStream.subscribe((value: SverminalResponse) => {
+	let commandHistory = createCommandHistory();
+
+	writer.subscribe((value: SverminalResponse) => {
 		if (value != undefined) {
 			switch (value.type) {
 				case SverminalResponseType.ECHO:
@@ -47,67 +60,75 @@
 
 	async function handleCommand(command: string) {
 		try {
+			lockCommand();
 			await processCommand(command);
 		} catch (error) {
-			sverror(`Failed to process command: ${command}`);
+			sverror(`Failed to process command: ${command} - Error: ${error}`);
 		} finally {
-			appendEmptyLine();
+			if (config.newlineBetweenCommands) {
+				appendEmptyLine();
+			}
 			appendNewCommandLine();
+
+			//Regardless of the result, save the command in history.
+			commandHistory.push(command);
 		}
 	}
 
 	function appendEmptyLine() {
 		let emptyLine = document.createElement('div');
 		emptyLine.setAttribute('contenteditable', 'false');
+		emptyLine.classList.add(...config.style.text);
 		emptyLine.innerHTML = ` `;
 		sverminalDiv.appendChild(emptyLine);
 	}
 
 	function svecho(message: string) {
-		let echoLine = document.createElement('div');
-		echoLine.innerHTML = `${message}`;
-		echoLine.setAttribute('contenteditable', 'false');
-		sverminalDiv.appendChild(echoLine);
+		let line = document.createElement('div');
+		line.innerHTML = `${message}`;
+		line.setAttribute('contenteditable', 'false');
+		line.classList.add(...config.style.text);
+		sverminalDiv.appendChild(line);
 	}
 
 	function svwarn(message: string) {
-		let echoLine = document.createElement('div');
-		echoLine.innerHTML = `${message}`;
-		echoLine.setAttribute('contenteditable', 'false');
-		echoLine.classList.add('text-orange-500');
-		sverminalDiv.appendChild(echoLine);
+		let line = document.createElement('div');
+		line.innerHTML = `${message}`;
+		line.setAttribute('contenteditable', 'false');
+		line.classList.add(...config.style.warn);
+		sverminalDiv.appendChild(line);
 	}
 
 	function sverror(message: string) {
-		let echoLine = document.createElement('div');
-		echoLine.innerHTML = `${message}`;
-		echoLine.setAttribute('contenteditable', 'false');
-		echoLine.classList.add('text-red-500');
-		sverminalDiv.appendChild(echoLine);
+		let line = document.createElement('div');
+		line.innerHTML = `${message}`;
+		line.setAttribute('contenteditable', 'false');
+		line.classList.add(...config.style.error);
+		sverminalDiv.appendChild(line);
 	}
 
 	function svinfo(message: string) {
-		let echoLine = document.createElement('div');
-		echoLine.innerHTML = `${message}`;
-		echoLine.setAttribute('contenteditable', 'false');
-		echoLine.classList.add('text-blue-500');
-		sverminalDiv.appendChild(echoLine);
+		let line = document.createElement('div');
+		line.innerHTML = `${message}`;
+		line.setAttribute('contenteditable', 'false');
+		line.classList.add(...config.style.info);
+		sverminalDiv.appendChild(line);
 	}
 
 	function appendPrompt() {
 		let promptSpan = document.createElement('span');
 		promptSpan.setAttribute('contenteditable', 'false');
-		promptSpan.classList.add('text-cyan-500', 'focus:outline-none');
-		promptSpan.innerHTML = `${prompt} `;
+		promptSpan.classList.add(...config.style.prompt, 'focus:outline-none');
+		promptSpan.innerHTML = promptText;
 		workingCommandLineDiv.appendChild(promptSpan);
 	}
 
-	function appendEmptyCommand() {
+	function appendCommand(command: string = '') {
 		let commandSpan = document.createElement('span');
 		commandSpan.setAttribute('contenteditable', 'true');
-		commandSpan.classList.add('text-yellow-500', 'focus:outline-none');
+		commandSpan.classList.add(...config.style.command, 'focus:outline-none');
 
-		let emptyTextnode: Text = new Text('');
+		let emptyTextnode: Text = new Text(command);
 		commandSpan.appendChild(emptyTextnode);
 
 		workingCommandLineDiv.appendChild(commandSpan);
@@ -116,7 +137,7 @@
 	function placeCursorAtEndOfTextNode(textnode: Text) {
 		const range = document.createRange();
 		const selection = window.getSelection();
-		range.setStart(textnode, textnode.textContent?.length!);
+		range.setStart(textnode, textnode.textContent?.length ?? 0);
 		range.collapse(true);
 		selection?.removeAllRanges();
 		selection?.addRange(range);
@@ -175,7 +196,7 @@
 		};
 
 		appendPrompt();
-		appendEmptyCommand();
+		appendCommand('');
 
 		sverminalDiv.appendChild(workingCommandLineDiv);
 
@@ -257,10 +278,8 @@
 		workingTextNode = getWorkingTextNodeOrCreateIfNull();
 		workingTextNode.textContent! += textToJoin?.trim();
 
-		placeCursorInTextNode(
-			workingTextNode,
-			workingTextNode.textContent!.length - textToJoin?.trim().length!
-		);
+		let offset = (workingTextNode.textContent?.length ?? 0) - (textToJoin?.trim().length ?? 0);
+		placeCursorInTextNode(workingTextNode, offset);
 	}
 
 	function insertSimulatedSpace() {
@@ -277,7 +296,7 @@
 
 		const cachedWorkingIndex = workingChildIndex;
 		const workingTextNode = getWorkingTextNodeOrCreateIfNull();
-		const workingTextLength = workingTextNode.textContent?.length!;
+		const workingTextLength = workingTextNode.textContent?.length ?? 0;
 		const isSplit = range.startOffset < workingTextLength;
 
 		const textparts = text.split(' ');
@@ -316,16 +335,66 @@
 		placeCursorAtWorkingIndex();
 	}
 
+	function lockCommand() {
+		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
+			if (index >= CommandIndex.COMMAND) {
+				childspan.setAttribute('contenteditable', 'false');
+			}
+		});
+	}
+
 	function formatArgs() {
 		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
 			if (index >= CommandIndex.ARGS) {
 				if (childspan.innerHTML.trim().startsWith('-')) {
-					childspan.classList.add('text-slate-400');
+					childspan.classList.add(...config.style.flags);
+					childspan.classList.remove(...config.style.text);
 				} else {
-					childspan.classList.remove('text-slate-400');
+					childspan.classList.add(...config.style.text);
+					childspan.classList.remove(...config.style.flags);
 				}
 			}
 		});
+	}
+
+	function navigateHistory(reverse: boolean = false) {
+		if (
+			(reverse && historyIndex == 0) ||
+			(!reverse && historyIndex >= commandHistory.length() - 1)
+		) {
+			return;
+		} else if (reverse) {
+			--historyIndex;
+		} else {
+			++historyIndex;
+		}
+
+		let historicalCommand = commandHistory.get(historyIndex);
+
+		if (historicalCommand === '') {
+			return;
+		}
+
+		let parts = historicalCommand.split(' ').filter((part) => part != ' ');
+		let command = parts.at(0);
+		let args = parts.slice(1);
+
+		//Clear the command! This should probably be its own function.
+		for (; workingChildIndex > 0; --workingChildIndex) {
+			let childToRemove = workingCommandLineDiv.children.item(workingChildIndex);
+			if (childToRemove) {
+				workingCommandLineDiv.removeChild(childToRemove);
+			}
+		}
+		workingChildIndex = CommandIndex.COMMAND;
+		appendCommand(command);
+		args.forEach((arg) => {
+			appendNewArg(arg);
+			insertSimulatedSpace();
+		});
+		formatArgs();
+		workingChildIndex = parts.length;
+		placeCursorAtWorkingIndex();
 	}
 
 	/// Event Handling! ///
@@ -334,6 +403,7 @@
 		const range = selection?.getRangeAt(0);
 
 		if (event.code === 'Enter') {
+			historyIndex = -1;
 			// ENTER - Command Handling
 			event.preventDefault(); // Prevent default new line behavior
 			const command = getCurrentCommand();
@@ -344,11 +414,12 @@
 			}
 		} else if (event.code === 'Space') {
 			// SPACE - Create new arguments. This may involve splitting existing commands/args.
+			historyIndex = -1;
 			if (range) {
 				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
 				const cursorOffset = range.startOffset;
-				const spanTextLength = workingTextNode.textContent?.length!;
-				if (workingTextNode.textContent?.trim().length! > 0) {
+				const spanTextLength = workingTextNode.textContent?.length ?? 0;
+				if (workingTextNode.textContent && workingTextNode.textContent.trim().length! > 0) {
 					if (cursorOffset < spanTextLength) {
 						splitCurrentChild(cursorOffset);
 					} else {
@@ -358,9 +429,10 @@
 			}
 		} else if (event.code === 'Backspace') {
 			// BACKSPACE - Potentially remove the current arg and navigate to a previous arg.
+			historyIndex = -1;
 			if (range) {
 				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
-				const spanTextLength = workingTextNode.textContent?.length!;
+				const spanTextLength = workingTextNode.textContent?.length ?? 0;
 				if (workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 1) {
 					event.preventDefault();
 					if (spanTextLength <= 1) {
@@ -386,7 +458,7 @@
 			if (range) {
 				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
 				const cursorOffset = range.startOffset;
-				const spanTextLength = workingTextNode.textContent?.length!;
+				const spanTextLength = workingTextNode.textContent?.length ?? 0;
 				if (
 					cursorOffset >= spanTextLength &&
 					workingChildIndex < workingCommandLineDiv.children.length - 1
@@ -398,6 +470,11 @@
 			//ARROWUP/ARROWDOWN - Reserved for future feature to navigate command history.
 			event.preventDefault();
 			//TODO - navigate history.
+
+			//replace the current command line with next item in history!
+			if (config.history.enabled) {
+				navigateHistory(event.code === 'ArrowDown');
+			}
 		} else if (event.code === 'Tab') {
 			//TAB - Reserved for future feature to autocomplete text.
 			//TODO - autocomplete.
@@ -410,6 +487,7 @@
 	}
 
 	function onPaste(event: ClipboardEvent) {
+		historyIndex = -1;
 		event.preventDefault();
 		if (event.clipboardData) {
 			const textToPaste = event.clipboardData.getData('text');
@@ -420,9 +498,18 @@
 		}
 	}
 
+	function onClick() {
+		//Prevent automatic cursor movement if the user has a selection.
+		const selection = window.getSelection();
+		if (selection) {
+			return;
+		}
+		placeCursorAtWorkingIndex();
+	}
+
 	function getCurrentCommand(): string {
 		const lastChild = sverminalDiv.lastElementChild as HTMLElement;
-		return lastChild?.innerText.replace(prompt, '').trim() || '';
+		return lastChild?.innerText.replace(promptText, '').trim() || '';
 	}
 
 	onMount(() => {
@@ -433,16 +520,14 @@
 <div class="flex flex-col justify-center items-center">
 	<div
 		bind:this={sverminalDiv}
-		contenteditable="false"
+		contenteditable="true"
 		spellcheck="false"
 		class="w-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 h-80 overflow-auto"
 		role="textbox"
 		aria-multiline="true"
 		tabindex="0"
 		on:keydown={onKeyDown}
-		on:click={() => {
-			placeCursorAtWorkingIndex();
-		}}
+		on:click={onClick}
 		on:paste={onPaste}
 	></div>
 </div>
