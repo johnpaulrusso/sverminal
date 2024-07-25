@@ -24,6 +24,8 @@
 	let workingChildIndex: number = CommandIndex.COMMAND;
     let historyIndex = -1;
 
+    let commandHistory: history.CommandHistoryStrategy;
+
 	responseStream.subscribe((value: SverminalResponse) => {
 		if (value != undefined) {
 			switch (value.type) {
@@ -61,7 +63,7 @@
 			appendNewCommandLine();
 
             //Regardless of the result, save the command in history.
-            history.push(command);
+            commandHistory.push(command);
 		}
 	}
 
@@ -343,7 +345,7 @@
 
     function navigateHistory(reverse: boolean = false) {
         
-        if(reverse && historyIndex == 0 || !reverse && historyIndex >= history.length() - 1){
+        if(reverse && historyIndex == 0 || !reverse && historyIndex >= commandHistory.length() - 1){
             return;
         }
         else if(reverse){
@@ -352,7 +354,7 @@
             ++historyIndex
         }
         
-        let historicalCommand = history.get(historyIndex);
+        let historicalCommand = commandHistory.get(historyIndex);
         
         if(historicalCommand === ''){
             return;
@@ -489,6 +491,7 @@
 	}
 
 	onMount(() => {
+        commandHistory = history.createCommandHistoryStrategy();
 		appendNewCommandLine();
 	});
 </script>

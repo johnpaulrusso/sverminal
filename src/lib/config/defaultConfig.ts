@@ -12,7 +12,7 @@ export const defaultConfig = {
     history: {
         enabled: true,
         method: "memory", //memory (default), sessionstorage (tbd), localstorage (tbd)
-        limit: 3,
+        limit: 10,
     }
 }
 
