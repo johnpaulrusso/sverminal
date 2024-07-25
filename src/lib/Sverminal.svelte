@@ -11,7 +11,7 @@
 	import { responseStream, SverminalResponseType, type SverminalResponse } from './Stores.js';
 
     import { defaultConfig, type Config } from '$lib/config/defaultConfig.js'
-    import * as history from '$lib/history.js'
+    import { createCommandHistory } from './history.js';
 
 	export let processCommand: (command: string) => Promise<void>;
     export let promptPrefix = "sverminal"; 
@@ -24,7 +24,7 @@
 	let workingChildIndex: number = CommandIndex.COMMAND;
     let historyIndex = -1;
 
-    let commandHistory: history.CommandHistoryStrategy;
+    let commandHistory = createCommandHistory();
 
 	responseStream.subscribe((value: SverminalResponse) => {
 		if (value != undefined) {
@@ -491,7 +491,6 @@
 	}
 
 	onMount(() => {
-        commandHistory = history.createCommandHistoryStrategy();
 		appendNewCommandLine();
 	});
 </script>
