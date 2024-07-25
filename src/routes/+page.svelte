@@ -41,6 +41,35 @@
         }
     }
 
+    const delay = (delayInms: number) => {
+        return new Promise(resolve => setTimeout(resolve, delayInms));
+    };
+
+    async function countdown(args: string[]){
+        if(args.length != 1){
+            sverminalWriter.error('countdown requires a positive integer argument between and including 1 and 99. Usage: countdown number');
+            return;
+        }
+
+        const arg = args[0];
+        const regex = /^\s*[0-9]{1,2}\s*$/;
+        if(!regex.test(arg)){
+            sverminalWriter.error('countdown requires a positive integer argument between and including 1 and 99. Usage: countdown number');
+            return;
+        }
+
+        const start = parseInt(arg[0]);
+        if(start < 1 || 99 < start ){
+            sverminalWriter.error('countdown requires a positive integer argument between and including 1 and 99. Usage: countdown number');
+            return;
+        }
+        
+        for(let i = start; i > 0; --i){
+            sverminalWriter.echo(`countdown: ${i}`);
+            await delay(1000);
+        }
+    }
+
 	async function processCommand(command: string): Promise<void> {
 		// Your command processing logic here
 		console.log('Processing command from parent component:', command);
@@ -64,6 +93,8 @@
 			error(args);
 		} else if (method === 'info') {
 			info(args);
+        } else if(method === 'countdown') {
+            await countdown(args);
 		} else {
             sverminalWriter.error(`${method} is not recognized as a valid command.`);
 		}
@@ -76,10 +107,6 @@
     <h3 class="text-sm md:text-base font-mono">Terminal emulator built on Svelte and Tailwind</h3>
 </div>
 
-<!--
-<div class="p-4">
-<Sverminal {processCommand} />
-</div>-->
 <div class="p-4">
 	<Sverminal {processCommand} writer={sverminalWriter} />
 </div>

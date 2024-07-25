@@ -56,14 +56,17 @@
 
 	async function handleCommand(command: string) {
 		try {
+            lockInput();
 			await processCommand(command);
 		} catch (error) {
 			sverror(`Failed to process command: ${command}`);
 		} finally {
+            unlockInput();
             if(config.newlineBetweenCommands){
                 appendEmptyLine();
             }
 			appendNewCommandLine();
+            
 
             //Regardless of the result, save the command in history.
             commandHistory.push(command);
@@ -331,6 +334,23 @@
 		commandNode.textContent = '';
 		placeCursorAtWorkingIndex();
 	}
+
+    function lockInput() {
+        Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
+            if(index >= CommandIndex.COMMAND){
+                childspan.setAttribute('contenteditable', 'false');
+            }
+        })
+    }
+
+    function unlockInput() {
+        Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
+            if(index >= CommandIndex.COMMAND){
+                childspan.setAttribute('contenteditable', 'true');
+            }
+        })
+        placeCursorAtWorkingIndex();
+    }
 
 	function formatArgs() {
 		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
