@@ -498,14 +498,14 @@
 		}
 	}
 
-    function onClick(){
-        //Prevent automatic cursor movement if the user has a selection.
-        const selection = window.getSelection();
-        if(selection){
-            return;
-        }
-        placeCursorAtWorkingIndex();
-    }
+	function onClick() {
+		//Prevent automatic cursor movement if the user has a selection.
+		const selection = window.getSelection();
+		if (selection) {
+			return;
+		}
+		placeCursorAtWorkingIndex();
+	}
 
 	function getCurrentCommand(): string {
 		const lastChild = sverminalDiv.lastElementChild as HTMLElement;
