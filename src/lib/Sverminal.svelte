@@ -451,6 +451,8 @@
 				if (workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 1) {
 					event.preventDefault();
 					decrementWorkingArg();
+				} else if (workingChildIndex == CommandIndex.COMMAND && range.startOffset <= 1) {
+					event.preventDefault();
 				}
 			}
 		} else if (event.code === 'ArrowRight') {
