@@ -433,6 +433,18 @@
         }
     }
 
+    function onKeyDownArrowLeft(event: KeyboardEvent){
+        // ARROWLEFT - Potentially navigate to a previous arg.
+        const span = userSpans[workingChildIndex - 1];
+        
+        if(span.position() <= SpanPosition.USER_START){
+            event.preventDefault();
+            if (workingChildIndex >= CommandIndex.ARGS) {
+                decrementWorkingArg();
+            } 
+        }
+    }
+
 	/// Event Handling! ///
 	function onKeyDown(event: KeyboardEvent) {
 		const selection = window.getSelection();
@@ -453,17 +465,10 @@
 			onKeyDownSpace(event);
 		} else if (event.code === 'Backspace') {
 			// BACKSPACE - Potentially remove the current arg and navigate to a previous arg.
-            onKeyDownBackspace(event)
+            onKeyDownBackspace(event);
 		} else if (event.code === 'ArrowLeft') {
 			// ARROWLEFT - Potentially navigate to a previous arg.
-			if (range) {
-				if (workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 2) {
-					event.preventDefault();
-					decrementWorkingArg();
-				} else if (workingChildIndex == CommandIndex.COMMAND && range.startOffset <= 1) {
-					event.preventDefault();
-				}
-			}
+			onKeyDownArrowLeft(event);
 		} else if (event.code === 'ArrowRight') {
 			// ARROWRIGHT- Potentially navigate to a later arg.
 			if (range) {
