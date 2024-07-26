@@ -123,7 +123,7 @@
 		workingCommandLineDiv.appendChild(promptSpan);
 	}
 
-	function appendCommand(command: string = '') {
+	function appendCommand(command: string = '\u200B') {
 		let commandSpan = document.createElement('span');
 		commandSpan.setAttribute('contenteditable', 'true');
 		commandSpan.classList.add(...config.style.command, 'focus:outline-none');
@@ -137,7 +137,7 @@
 	function placeCursorAtEndOfTextNode(textnode: Text) {
 		const range = document.createRange();
 		const selection = window.getSelection();
-		range.setStart(textnode, textnode.textContent?.length ?? 0);
+		range.setStart(textnode, textnode.length);
 		range.collapse(true);
 		selection?.removeAllRanges();
 		selection?.addRange(range);
@@ -196,7 +196,7 @@
 		};
 
 		appendPrompt();
-		appendCommand('');
+		appendCommand();
 
 		sverminalDiv.appendChild(workingCommandLineDiv);
 
@@ -206,7 +206,7 @@
 		sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
 	}
 
-	function appendNewArg(arg: string = '') {
+	function appendNewArg(arg: string = '\u200B') {
 		let argSpan = document.createElement('span');
 		argSpan.setAttribute('contenteditable', 'true');
 		argSpan.classList.add('focus:outline-none');
@@ -218,7 +218,7 @@
 		workingChildIndex++;
 		if (workingChildIndex >= workingCommandLineDiv.children.length) {
 			workingCommandLineDiv.appendChild(argSpan);
-			placeCursorAtWorkingIndex(true);
+			placeCursorAtWorkingIndex();
 			console.log('new arg last!');
 		} else {
 			workingCommandLineDiv.insertBefore(
@@ -230,7 +230,7 @@
 		}
 	}
 
-	function removeWorkingArg() {
+	function removeWorkingArg() { 
 		let childToRemove = workingCommandLineDiv.children[workingChildIndex] as Element;
 
 		if (childToRemove == null) {
@@ -331,7 +331,7 @@
 
 	function backspaceFirstCommandCharacter() {
 		const commandNode = getWorkingTextNodeOrCreateIfNull();
-		commandNode.textContent = '';
+		commandNode.textContent = '\u200B';
 		placeCursorAtWorkingIndex();
 	}
 
@@ -432,7 +432,7 @@
 			historyIndex = -1;
 			if (range) {
 				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
-				const spanTextLength = workingTextNode.textContent?.length ?? 0;
+				const spanTextLength = workingTextNode.length;
 				if (workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 1) {
 					event.preventDefault();
 					if (spanTextLength <= 1) {
@@ -509,7 +509,7 @@
 
 	function getCurrentCommand(): string {
 		const lastChild = sverminalDiv.lastElementChild as HTMLElement;
-		return lastChild?.innerText.replace(promptText, '').trim() || '';
+		return lastChild?.innerText.replace(promptText, '').replace('\u200B','').trim() || '';
 	}
 
 	onMount(() => {
