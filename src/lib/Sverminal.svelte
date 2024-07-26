@@ -16,18 +16,25 @@
 		type SverminalResponse,
 		type SverminalWriter
 	} from './writer/writer.js';
+	import Page from '../routes/+page.svelte';
+	import { SverminalUserSpan, SverminalPromptSpan, SpanPosition } from './core/span.js';
 
 	export let processor: (command: string) => Promise<void>;
 	export let promptPrefix = 'sverminal';
 	export let config: Config = defaultConfig;
 	export let writer: SverminalWriter;
 
-	$: promptText = `${promptPrefix}${config.promptSuffix} `;
+	$: promptText = `${promptPrefix}${config.promptSuffix}`;
+
+    const ZERO_WIDTH_SPACE: string = '\u200B';
+    const ZERO_WIDTH_SPACE_REGEX: RegExp = /\u200B/g;
+    const BASE_SPAN_LENGTH: number = ZERO_WIDTH_SPACE.length;
 
 	let sverminalDiv: HTMLDivElement;
 	let workingCommandLineDiv: HTMLDivElement;
 	let workingChildIndex: number = CommandIndex.COMMAND;
 	let historyIndex = -1;
+    let userSpans: SverminalUserSpan[] = [];
 
 	let commandHistory = createCommandHistory();
 
@@ -116,22 +123,14 @@
 	}
 
 	function appendPrompt() {
-		let promptSpan = document.createElement('span');
-		promptSpan.setAttribute('contenteditable', 'false');
-		promptSpan.classList.add(...config.style.prompt, 'focus:outline-none');
-		promptSpan.innerHTML = promptText;
-		workingCommandLineDiv.appendChild(promptSpan);
+		const promptSpan = new SverminalPromptSpan(promptText, config.style.prompt);
+		workingCommandLineDiv.appendChild(promptSpan.element());
 	}
 
-	function appendCommand(command: string = '\u200B') {
-		let commandSpan = document.createElement('span');
-		commandSpan.setAttribute('contenteditable', 'true');
-		commandSpan.classList.add(...config.style.command, 'focus:outline-none');
-
-		let emptyTextnode: Text = new Text(command);
-		commandSpan.appendChild(emptyTextnode);
-
-		workingCommandLineDiv.appendChild(commandSpan);
+	function appendCommand(command: string = '') {
+		let commandSpan = new SverminalUserSpan(config.style.command, command);
+		workingCommandLineDiv.appendChild(commandSpan.element());
+        userSpans.push(commandSpan);
 	}
 
 	function placeCursorAtEndOfTextNode(textnode: Text) {
@@ -172,19 +171,24 @@
 		return textnode;
 	}
 
+    function getWorkingTextNodeTextContext(): string {
+		const childspan = workingCommandLineDiv.children.item(workingChildIndex) as Element;
+		let textnode = childspan.firstChild as Text | null;
+		if (!textnode || !textnode.textContent) {
+            console.error('sverminal error: working text node or text context null.');
+			return '';
+		}
+		return textnode.textContent;
+	}
+
 	function placeCursorAtWorkingIndex(start: boolean = false) {
 		if (workingChildIndex >= workingCommandLineDiv.children.length) {
 			console.error('Failed to place cursor in Sverminal!');
 			return;
 		}
 
-		const textnode = getWorkingTextNodeOrCreateIfNull();
-
-		if (start) {
-			placeCursorAtStartOfTextNode(textnode);
-		} else {
-			placeCursorAtEndOfTextNode(textnode);
-		}
+        let span = userSpans[workingChildIndex - 1];
+        span.placeCursorAtEnd();
 	}
 
 	function appendNewCommandLine() {
@@ -206,23 +210,18 @@
 		sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
 	}
 
-	function appendNewArg(arg: string = '\u200B') {
-		let argSpan = document.createElement('span');
-		argSpan.setAttribute('contenteditable', 'true');
-		argSpan.classList.add('focus:outline-none');
-		argSpan.innerHTML = ``;
-
-		let textnode: Text = new Text(arg);
-		argSpan.appendChild(textnode);
+	function appendNewArg(arg: string = '') {
+		let argSpan = new SverminalUserSpan(config.style.text, arg);
+        userSpans.push(argSpan);
 
 		workingChildIndex++;
 		if (workingChildIndex >= workingCommandLineDiv.children.length) {
-			workingCommandLineDiv.appendChild(argSpan);
+			workingCommandLineDiv.appendChild(argSpan.element());
 			placeCursorAtWorkingIndex();
 			console.log('new arg last!');
 		} else {
 			workingCommandLineDiv.insertBefore(
-				argSpan,
+				argSpan.element(),
 				workingCommandLineDiv.children[workingChildIndex]
 			);
 			placeCursorAtWorkingIndex(true);
@@ -258,14 +257,10 @@
 	}
 
 	function splitCurrentChild(offset: number) {
-		let currentTextNode = getWorkingTextNodeOrCreateIfNull();
-		let currentNodeReplacementText = '';
-		let newArgText = '';
-		if (currentTextNode.textContent) {
-			currentNodeReplacementText = currentTextNode.textContent?.substring(0, offset);
-			newArgText = currentTextNode.textContent?.substring(offset);
-			currentTextNode.textContent = currentNodeReplacementText;
-		}
+		let textContent = getWorkingTextNodeTextContext();
+		const currentNodeReplacementText = textContent.substring(0, offset);
+		const newArgText = textContent.substring(offset);
+        textContent = currentNodeReplacementText;
 		appendNewArg(newArgText);
 	}
 
@@ -331,7 +326,7 @@
 
 	function backspaceFirstCommandCharacter() {
 		const commandNode = getWorkingTextNodeOrCreateIfNull();
-		commandNode.textContent = '\u200B';
+		commandNode.textContent = ZERO_WIDTH_SPACE;
 		placeCursorAtWorkingIndex();
 	}
 
@@ -346,7 +341,7 @@
 	function formatArgs() {
 		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
 			if (index >= CommandIndex.ARGS) {
-				if (childspan.innerHTML.replace('\u200B','').trim().startsWith('-')) {
+				if (childspan.innerHTML.replace(ZERO_WIDTH_SPACE_REGEX,'').trim().startsWith('-')) {
 					childspan.classList.add(...config.style.flags);
 					childspan.classList.remove(...config.style.text);
 				} else {
@@ -397,6 +392,28 @@
 		placeCursorAtWorkingIndex();
 	}
 
+    /**
+     * SPACE - Create new arguments. This may involve splitting existing commands/args.
+     */
+    function onKeyDownSpace(event: KeyboardEvent){
+        historyIndex = -1;
+        const span = userSpans[workingChildIndex - 1];
+
+        if(span.populated())
+        {
+            event.preventDefault();
+            if (span.position() === SpanPosition.MIDDLE) {
+                splitCurrentChild(0); //TODO
+                console.log('space split!');
+            } else {
+                appendNewArg();
+                console.log('space new!');
+            }
+        } else {
+            console.log('space nominal!');
+        }
+    }
+
 	/// Event Handling! ///
 	function onKeyDown(event: KeyboardEvent) {
 		const selection = window.getSelection();
@@ -414,19 +431,7 @@
 			}
 		} else if (event.code === 'Space') {
 			// SPACE - Create new arguments. This may involve splitting existing commands/args.
-			historyIndex = -1;
-			if (range) {
-				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
-				const cursorOffset = range.startOffset;
-				const spanTextLength = workingTextNode.textContent?.length ?? 0;
-				if (workingTextNode.textContent && workingTextNode.textContent.trim().length! > 0) {
-					if (cursorOffset < spanTextLength) {
-						splitCurrentChild(cursorOffset);
-					} else {
-						appendNewArg();
-					}
-				}
-			}
+			onKeyDownSpace(event);
 		} else if (event.code === 'Backspace') {
 			// BACKSPACE - Potentially remove the current arg and navigate to a previous arg.
 			historyIndex = -1;
@@ -448,7 +453,7 @@
 		} else if (event.code === 'ArrowLeft') {
 			// ARROWLEFT - Potentially navigate to a previous arg.
 			if (range) {
-				if (workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 1) {
+				if (workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 2) {
 					event.preventDefault();
 					decrementWorkingArg();
 				} else if (workingChildIndex == CommandIndex.COMMAND && range.startOffset <= 1) {
@@ -511,7 +516,7 @@
 
 	function getCurrentCommand(): string {
 		const lastChild = sverminalDiv.lastElementChild as HTMLElement;
-		return lastChild?.innerText.replace(promptText, '').replace(/\u200B/g,'').trim() || '';
+		return lastChild?.innerText.replace(promptText, '').replace(ZERO_WIDTH_SPACE_REGEX,'').trim() || '';
 	}
 
 	onMount(() => {
