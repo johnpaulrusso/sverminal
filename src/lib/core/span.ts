@@ -5,6 +5,7 @@ export enum SpanPosition {
     NONE = 0,
     TRUE_START,
     USER_START,
+    FALSE_START, //This is the situation where a span has leading whitespace.
     MIDDLE,
     END
 }
@@ -112,7 +113,15 @@ export class SverminalUserSpan extends SverminalSpan{
             console.warn('sverminal range position is greater than the span length.');
             return SpanPosition.NONE;
         } else {
-            return SpanPosition.MIDDLE;
+            if(this.textnode.textContent === null){
+                throw new Error('This should never occur!')
+            }
+            const before = this.textnode.textContent.substring(SverminalUserSpan.BASE_LENGTH, range.startOffset);
+            if(before.trim() === ''){
+                return SpanPosition.FALSE_START;
+            }else{
+                return SpanPosition.MIDDLE;
+            }
         }
     }
 
@@ -135,5 +144,33 @@ export class SverminalUserSpan extends SverminalSpan{
 
     placeCursorAtEnd() {
         this.placeCursor(this.textnode.length);
+    }
+
+    /**
+     * split removes the text to be split based on the current cursor location.
+     * @returns The removed text needed to create the new argument.
+     */
+    split(): string {
+        const selection = window.getSelection();
+        if(!selection){
+            console.warn('sverminal span split not possible with current selection.');
+            return '';
+        }
+
+		const range = selection.getRangeAt(0);
+        if(!range){
+            console.warn('sverminal span split not possible with current selection range.');
+            return '';
+        }
+
+        if(this.textnode.textContent === null){
+            throw new Error('This should never occur!')
+        }
+
+        const offset = range.startOffset;
+        const copy = `${this.textnode.textContent}`;
+        this.textnode.textContent = copy.substring(0, offset);
+
+        return copy.substring(offset);
     }
 }

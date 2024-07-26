@@ -16,7 +16,6 @@
 		type SverminalResponse,
 		type SverminalWriter
 	} from './writer/writer.js';
-	import Page from '../routes/+page.svelte';
 	import { SverminalUserSpan, SverminalPromptSpan, SpanPosition } from './core/span.js';
 
 	export let processor: (command: string) => Promise<void>;
@@ -131,24 +130,6 @@
 		let commandSpan = new SverminalUserSpan(config.style.command, command);
 		workingCommandLineDiv.appendChild(commandSpan.element());
         userSpans.push(commandSpan);
-	}
-
-	function placeCursorAtEndOfTextNode(textnode: Text) {
-		const range = document.createRange();
-		const selection = window.getSelection();
-		range.setStart(textnode, textnode.length);
-		range.collapse(true);
-		selection?.removeAllRanges();
-		selection?.addRange(range);
-	}
-
-	function placeCursorAtStartOfTextNode(textnode: Text) {
-		const range = document.createRange();
-		const selection = window.getSelection();
-		range.setStart(textnode, 0);
-		range.collapse(true);
-		selection?.removeAllRanges();
-		selection?.addRange(range);
 	}
 
 	function placeCursorInTextNode(textnode: Text, offset: number) {
@@ -266,11 +247,9 @@
 		console.log('inc arg');
 	}
 
-	function splitCurrentChild(offset: number) {
-		let textContent = getWorkingTextNodeTextContext();
-		const currentNodeReplacementText = textContent.substring(0, offset);
-		const newArgText = textContent.substring(offset);
-        textContent = currentNodeReplacementText;
+	function splitWorkingSpan() {
+		const span = userSpans[workingChildIndex - 1];
+        const newArgText = span.split();
 		appendNewArg(newArgText);
 	}
 
@@ -307,7 +286,7 @@
 		const textparts = text.split(' ');
 
 		if (isSplit) {
-			splitCurrentChild(range.startOffset);
+			splitWorkingSpan();
 			insertSimulatedSpace();
 			workingChildIndex = cachedWorkingIndex;
 		}
@@ -416,14 +395,18 @@
         const span = userSpans[workingChildIndex - 1];
 
         if(span.populated())
-        {
-            event.preventDefault();
+        {   
             if (span.position() === SpanPosition.MIDDLE) {
-                splitCurrentChild(0); //TODO
+                event.preventDefault();
+                splitWorkingSpan(); //TODO
+                placeCursorAtWorkingIndex(true);
                 console.log('space split!');
-            } else {
+            } else if (span.position() === SpanPosition.END) {
+                event.preventDefault();
                 appendNewArg();
                 console.log('space new!');
+            } else {
+                console.log('space nominal!');
             }
         } else {
             console.log('space nominal!');
@@ -479,9 +462,6 @@
 
 	/// Event Handling! ///
 	function onKeyDown(event: KeyboardEvent) {
-		const selection = window.getSelection();
-		const range = selection?.getRangeAt(0);
-
 		if (event.code === 'Enter') {
             onKeyDownEnter(event);
 		} else if (event.code === 'Space') {
