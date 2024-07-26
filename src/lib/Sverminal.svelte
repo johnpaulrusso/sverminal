@@ -197,7 +197,10 @@
 	}
 
 	function appendNewCommandLine() {
-		workingCommandLineDiv = document.createElement('div');
+		
+        userSpans = [];
+        
+        workingCommandLineDiv = document.createElement('div');
 		workingCommandLineDiv.setAttribute('contenteditable', 'true');
 		workingCommandLineDiv.classList.add('focus:outline-none');
 		workingCommandLineDiv.onclick = (event) => {
@@ -393,6 +396,18 @@
 		placeCursorAtWorkingIndex();
 	}
 
+    function onKeyDownEnter(event: KeyboardEvent){
+        historyIndex = -1;
+        // ENTER - Command Handling
+        event.preventDefault(); // Prevent default new line behavior
+        const command = getCurrentCommand();
+        if (command) {
+            handleCommand(command);
+        } else {
+            appendNewCommandLine();
+        }
+    }
+
     /**
      * SPACE - Create new arguments. This may involve splitting existing commands/args.
      */
@@ -468,15 +483,7 @@
 		const range = selection?.getRangeAt(0);
 
 		if (event.code === 'Enter') {
-			historyIndex = -1;
-			// ENTER - Command Handling
-			event.preventDefault(); // Prevent default new line behavior
-			const command = getCurrentCommand();
-			if (command) {
-				handleCommand(command);
-			} else {
-				appendNewCommandLine();
-			}
+            onKeyDownEnter(event);
 		} else if (event.code === 'Space') {
 			// SPACE - Create new arguments. This may involve splitting existing commands/args.
 			onKeyDownSpace(event);
