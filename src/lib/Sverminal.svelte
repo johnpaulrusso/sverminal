@@ -346,7 +346,7 @@
 	function formatArgs() {
 		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
 			if (index >= CommandIndex.ARGS) {
-				if (childspan.innerHTML.trim().startsWith('-')) {
+				if (childspan.innerHTML.replace('\u200B','').trim().startsWith('-')) {
 					childspan.classList.add(...config.style.flags);
 					childspan.classList.remove(...config.style.text);
 				} else {
