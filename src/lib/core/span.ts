@@ -63,6 +63,17 @@ export class SverminalUserSpan extends SverminalSpan{
     }
 
     /**
+     * empty
+     * @returns true if the nothing has been entered into the span by the user.
+     */
+    empty(): boolean {
+        if(this.textnode.textContent === null){
+            throw new Error('This should never occur!')
+        }
+        return this.textnode.textContent.length == SverminalUserSpan.BASE_LENGTH;
+    }  
+
+    /**
      * populated
      * @returns true if the user has entered any non-whitespace text into the span.
      */
@@ -70,7 +81,7 @@ export class SverminalUserSpan extends SverminalSpan{
         if(this.textnode.textContent === null){
             throw new Error('This should never occur!')
         }
-        return this.textnode.textContent.trim().length > ZERO_WIDTH_SPACE.length;
+        return this.textnode.textContent.trim().length > SverminalUserSpan.BASE_LENGTH;
     }
 
     /**

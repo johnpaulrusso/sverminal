@@ -230,13 +230,15 @@
 	}
 
 	function removeWorkingArg() { 
-		let childToRemove = workingCommandLineDiv.children[workingChildIndex] as Element;
+        if(workingChildIndex < CommandIndex.ARGS){
+            console.warn('sverminal tried to remove the command span.')
+            return;
+        }
 
-		if (childToRemove == null) {
-			console.log(`index: ${workingChildIndex}, length" ${workingCommandLineDiv.children.length}`);
-		}
+		const span = userSpans[workingChildIndex - 1];
+        userSpans.splice(workingChildIndex - 1, 1);
 
-		workingCommandLineDiv.removeChild(childToRemove);
+		workingCommandLineDiv.removeChild(span.element());
 		workingChildIndex--;
 
 		placeCursorAtWorkingIndex();
@@ -324,12 +326,6 @@
 		}
 	}
 
-	function backspaceFirstCommandCharacter() {
-		const commandNode = getWorkingTextNodeOrCreateIfNull();
-		commandNode.textContent = ZERO_WIDTH_SPACE;
-		placeCursorAtWorkingIndex();
-	}
-
 	function lockCommand() {
 		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
 			if (index >= CommandIndex.COMMAND) {
@@ -414,6 +410,29 @@
         }
     }
 
+    function onKeyDownBackspace(event: KeyboardEvent){
+        historyIndex = -1;
+        const span = userSpans[workingChildIndex - 1];
+
+        const position = span.position();
+        if(position === SpanPosition.NONE){
+            return;
+        }
+
+        if(position <= SpanPosition.USER_START){
+            if(workingChildIndex == CommandIndex.COMMAND){
+                event.preventDefault();
+            }else if(workingChildIndex >= CommandIndex.ARGS){
+                event.preventDefault();
+                if (span.empty()) {
+                    removeWorkingArg();
+                } else {
+                    joinCurrentChildWithPreviousChild();
+                }
+            }
+        }
+    }
+
 	/// Event Handling! ///
 	function onKeyDown(event: KeyboardEvent) {
 		const selection = window.getSelection();
@@ -434,22 +453,7 @@
 			onKeyDownSpace(event);
 		} else if (event.code === 'Backspace') {
 			// BACKSPACE - Potentially remove the current arg and navigate to a previous arg.
-			historyIndex = -1;
-			if (range) {
-				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
-				const spanTextLength = workingTextNode.length;
-				if (workingChildIndex >= CommandIndex.ARGS && range.startOffset <= 1) {
-					event.preventDefault();
-					if (spanTextLength <= 1) {
-						removeWorkingArg();
-					} else {
-						joinCurrentChildWithPreviousChild();
-					}
-				} else if (workingChildIndex == CommandIndex.COMMAND && range.startOffset <= 1) {
-					event.preventDefault();
-					backspaceFirstCommandCharacter();
-				}
-			}
+            onKeyDownBackspace(event)
 		} else if (event.code === 'ArrowLeft') {
 			// ARROWLEFT - Potentially navigate to a previous arg.
 			if (range) {
