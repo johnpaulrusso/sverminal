@@ -188,7 +188,12 @@
 		}
 
         let span = userSpans[workingChildIndex - 1];
-        span.placeCursorAtEnd();
+        if(start){
+            span.placeCursorAtUserStart();
+        }else{
+            span.placeCursorAtEnd();
+        }
+        
 	}
 
 	function appendNewCommandLine() {
@@ -445,6 +450,18 @@
         }
     }
 
+    function onKeyDownArrowRight(event: KeyboardEvent){
+        // ARROWLEFT - Potentially navigate to a previous arg.
+        const span = userSpans[workingChildIndex - 1];
+        if (
+            span.position() == SpanPosition.END &&
+            workingChildIndex < workingCommandLineDiv.children.length - 1
+        ) {
+            event.preventDefault();
+            incrementWorkingArg();
+        }
+    }
+
 	/// Event Handling! ///
 	function onKeyDown(event: KeyboardEvent) {
 		const selection = window.getSelection();
@@ -471,17 +488,7 @@
 			onKeyDownArrowLeft(event);
 		} else if (event.code === 'ArrowRight') {
 			// ARROWRIGHT- Potentially navigate to a later arg.
-			if (range) {
-				let workingTextNode = getWorkingTextNodeOrCreateIfNull();
-				const cursorOffset = range.startOffset;
-				const spanTextLength = workingTextNode.textContent?.length ?? 0;
-				if (
-					cursorOffset >= spanTextLength &&
-					workingChildIndex < workingCommandLineDiv.children.length - 1
-				) {
-					incrementWorkingArg();
-				}
-			}
+			onKeyDownArrowRight(event);
 		} else if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
 			//ARROWUP/ARROWDOWN - Reserved for future feature to navigate command history.
 			event.preventDefault();
