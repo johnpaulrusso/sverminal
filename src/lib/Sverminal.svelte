@@ -511,7 +511,7 @@
 
 	function getCurrentCommand(): string {
 		const lastChild = sverminalDiv.lastElementChild as HTMLElement;
-		return lastChild?.innerText.replace(promptText, '').replace('\u200B','').trim() || '';
+		return lastChild?.innerText.replace(promptText, '').replace(/\u200B/g,'').trim() || '';
 	}
 
 	onMount(() => {
