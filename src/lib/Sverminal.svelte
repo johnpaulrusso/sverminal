@@ -532,7 +532,7 @@
 		bind:this={sverminalDiv}
 		contenteditable="true"
 		spellcheck="false"
-		class="w-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 h-80 overflow-auto"
+		class="sverminal-main w-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 h-80 overflow-auto"
 		role="textbox"
 		aria-multiline="true"
 		tabindex="0"
