@@ -11,7 +11,30 @@ function verifySelectionAndRange(expectedOffset: number, expectedText: string) {
     })
 }
 
-describe('template spec', () => {
+function verifyLineContent(line: JQuery<HTMLElement>, expectedText: string[]) {
+    expect(line.children().length).equals(expectedText.length);
+    line.children().toArray().forEach((child, index) => {
+        expect(child.tagName).equals('SPAN')
+        expect(child.innerHTML).equals(expectedText[index]);
+    })
+}
+
+function getActiveLine(): Cypress.Chainable<JQuery<HTMLElement>>{
+    return cy.get('.sverminal-main').children().last();
+}
+
+function setCursor(element: JQuery<HTMLElement>, offset: number) {
+    cy.window().then(window => {
+        const selection = window.getSelection();    
+        const range = window.document.createRange();
+        range.setStart(element.get(0).firstChild, offset);
+        range.collapse(true);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+    })
+}
+
+describe('sverminal initial cursor position user actions', () => {
   it('sverminal initialization', () => {
     cy.visit('http://localhost:5173/');
 
@@ -21,19 +44,10 @@ describe('template spec', () => {
 
     //Verify the initial command line spans.
     element.children().should('have.length', 1);
-    cy.get('.sverminal-main').then(element => {
-        const commandLine = element.children().last();
-        expect(commandLine.children().length).equals(2);
 
-        commandLine.children().toArray().forEach((lineElement, index) => {
-            expect(lineElement.tagName).equals('SPAN')
-            if(index == 0){
-                expect(lineElement.innerHTML).equals('sverminal&gt;');
-            } else if (index == 1){
-                expect(lineElement.innerHTML).equals(' \u200B');
-            }
-        })
-    });
+    getActiveLine().then(commandLine => {
+        verifyLineContent(commandLine, ['sverminal&gt;', ' \u200B']);
+    })
 
     //Verify the initial cursor location.
     verifySelectionAndRange(2, ' \u200B');
@@ -100,4 +114,94 @@ describe('template spec', () => {
 
   })
 
+  it('enter from the initial cursor position should create a new line.', () => {
+    cy.visit('http://localhost:5173/');
+
+    const element = cy.get('.sverminal-main').type('{enter}')
+
+    element.children().should('have.length', 2);
+    verifySelectionAndRange(2, ' \u200B');
+
+  })
+
 })
+
+describe('sverminal user action - SPACE', () => {
+  
+    it('space key from the initial cursor position adds whitespace to the command.', () => {
+      cy.visit('http://localhost:5173/');
+  
+      const element = cy.get('.sverminal-main').type(' ')
+  
+      verifySelectionAndRange(3, ' \u200B ');
+      getActiveLine().then(commandLine => {
+        verifyLineContent(commandLine, ['sverminal&gt;', ' \u200B ']);
+      })
+  
+    })
+
+    it('space key after a command creates a new empty argument.', () => {
+        cy.visit('http://localhost:5173/');
+    
+        const element = cy.get('.sverminal-main').type('command').type(' ')
+    
+        verifySelectionAndRange(2, ' \u200B');
+        getActiveLine().then(commandLine => {
+          verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcommand', ' \u200B']);
+        })
+    
+    })
+
+    it('space key after an argument creates a new empty argument.', () => {
+        cy.visit('http://localhost:5173/');
+    
+        const element = cy.get('.sverminal-main').type('command').type(' ').type('arg1').type(' ');
+    
+        verifySelectionAndRange(2, ' \u200B');
+        getActiveLine().then(commandLine => {
+          verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcommand', ' \u200Barg1', ' \u200B']);
+        })
+    
+    })
+
+    it('space key at the beginning of an existing command pads whitespace to the beginning of the command.', () => {
+        cy.visit('http://localhost:5173/');
+    
+        cy.get('.sverminal-main').type('command');
+
+        getActiveLine().then(commandLine => {
+            let command = commandLine.children().last();
+            setCursor(command, 2);
+        }) 
+
+        cy.get('.sverminal-main').type(' ');
+
+        verifySelectionAndRange(3, ' \u200B command');
+        getActiveLine().then(commandLine => {
+          verifyLineContent(commandLine, ['sverminal&gt;', ' \u200B command']);
+        })
+    
+    })
+
+    it('space key in the middle of an existing command splits the text after the cursor into a new argument.', () => {
+        cy.visit('http://localhost:5173/');
+    
+        cy.get('.sverminal-main').type('command');
+
+        getActiveLine().then(commandLine => {
+            let command = commandLine.children().last();
+            setCursor(command, 5);
+        }) 
+
+        cy.get('.sverminal-main').type(' ');
+
+        verifySelectionAndRange(2, ' \u200Bmand');
+        getActiveLine().then(commandLine => {
+          verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcom', ' \u200Bmand']);
+        })
+    
+    })
+
+
+  
+  })
