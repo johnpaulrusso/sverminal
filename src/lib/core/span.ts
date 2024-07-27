@@ -173,4 +173,20 @@ export class SverminalUserSpan extends SverminalSpan{
 
         return copy.substring(offset);
     }
+
+    text() : string {
+        if(this.textnode.textContent === null){
+            throw new Error('This should never occur!')
+        }
+
+        return this.textnode.textContent.substring(SverminalUserSpan.BASE_LENGTH);
+    }
+
+    append(text: string){
+        if(this.textnode.textContent === null){
+            throw new Error('This should never occur!')
+        }
+
+        this.textnode.textContent += text;
+    }
 }

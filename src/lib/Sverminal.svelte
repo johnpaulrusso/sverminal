@@ -254,16 +254,16 @@
 	}
 
 	function joinCurrentChildWithPreviousChild() {
-		let workingTextNode = getWorkingTextNodeOrCreateIfNull();
-		const textToJoin = workingTextNode.textContent;
 
-		removeWorkingArg();
+        const srcSpan = userSpans[workingChildIndex - 1];
+        const dstSpan = userSpans[workingChildIndex - 2];
+        const text = srcSpan.text();
+        const offset = dstSpan.length();
 
-		workingTextNode = getWorkingTextNodeOrCreateIfNull();
-		workingTextNode.textContent! += textToJoin?.trim();
+		removeWorkingArg(); //This should out the cursor in the correct location.
 
-		let offset = (workingTextNode.textContent?.length ?? 0) - (textToJoin?.trim().length ?? 0);
-		placeCursorInTextNode(workingTextNode, offset);
+        dstSpan.append(text);
+        dstSpan.placeCursor(offset);
 	}
 
 	function insertSimulatedSpace() {
