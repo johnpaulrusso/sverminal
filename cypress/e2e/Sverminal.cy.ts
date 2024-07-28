@@ -34,6 +34,13 @@ function setCursor(element: JQuery<HTMLElement>, offset: number) {
     })
 }
 
+function sverminalType(text: string) {
+    cy.get('.sverminal-main')
+                .should('be.visible')
+                .wait(50)
+                .type(text, { delay: 10 });
+}
+
 describe('sverminal initial cursor position user actions', () => {
   it('sverminal initialization', () => {
     cy.visit('http://localhost:5173/');
@@ -57,9 +64,8 @@ describe('sverminal initial cursor position user actions', () => {
   it('space key from the initial cursor position adds whitespace to the command.', () => {
     cy.visit('http://localhost:5173/');
 
-    const element = cy.get('.sverminal-main').type(' ')
+    sverminalType(' ')
 
-    //Verify the initial cursor location.
     verifySelectionAndRange(3, ' \u200B ');
 
   })
@@ -67,9 +73,8 @@ describe('sverminal initial cursor position user actions', () => {
   it('left arrow key from the initial cursor position should do nothing.', () => {
     cy.visit('http://localhost:5173/');
 
-    const element = cy.get('.sverminal-main').type('{leftArrow}')
+    sverminalType('{leftArrow}')
 
-    //Verify the initial cursor location.
     verifySelectionAndRange(2, ' \u200B');
 
   })
@@ -77,9 +82,8 @@ describe('sverminal initial cursor position user actions', () => {
   it('right arrow key from the initial cursor position should do nothing.', () => {
     cy.visit('http://localhost:5173/');
 
-    const element = cy.get('.sverminal-main').type('{rightArrow}')
+    sverminalType('{rightArrow}')
 
-    //Verify the initial cursor location.
     verifySelectionAndRange(2, ' \u200B');
 
   })
@@ -87,9 +91,8 @@ describe('sverminal initial cursor position user actions', () => {
   it('backspace from the initial cursor position should do nothing.', () => {
     cy.visit('http://localhost:5173/');
 
-    const element = cy.get('.sverminal-main').type('{backspace}')
+    sverminalType('{backspace}')
 
-    //Verify the initial cursor location.
     verifySelectionAndRange(2, ' \u200B');
 
   })
@@ -97,9 +100,8 @@ describe('sverminal initial cursor position user actions', () => {
   it('up arrow from the initial cursor position should do nothing if no history is present.', () => {
     cy.visit('http://localhost:5173/');
 
-    const element = cy.get('.sverminal-main').type('{upArrow}')
+    sverminalType('{upArrow}')
 
-    //Verify the initial cursor location.
     verifySelectionAndRange(2, ' \u200B');
 
   })
@@ -107,9 +109,8 @@ describe('sverminal initial cursor position user actions', () => {
   it('down arrow from the initial cursor position should do nothing if no history is present.', () => {
     cy.visit('http://localhost:5173/');
 
-    const element = cy.get('.sverminal-main').type('{upArrow}')
+    sverminalType('{upArrow}')
 
-    //Verify the initial cursor location.
     verifySelectionAndRange(2, ' \u200B');
 
   })
@@ -117,21 +118,20 @@ describe('sverminal initial cursor position user actions', () => {
   it('enter from the initial cursor position should create a new line.', () => {
     cy.visit('http://localhost:5173/');
 
-    const element = cy.get('.sverminal-main').type('{enter}')
+    sverminalType('{enter}');
+    cy.get('.sverminal-main').children().should('have.length', 2);
 
-    element.children().should('have.length', 2);
     verifySelectionAndRange(2, ' \u200B');
-
   })
 
 })
 
 describe('sverminal user action - SPACE', () => {
-  
+
     it('space key from the initial cursor position adds whitespace to the command.', () => {
       cy.visit('http://localhost:5173/');
   
-      const element = cy.get('.sverminal-main').type(' ')
+      sverminalType(' ')
   
       verifySelectionAndRange(3, ' \u200B ');
       getActiveLine().then(commandLine => {
@@ -143,7 +143,8 @@ describe('sverminal user action - SPACE', () => {
     it('space key after a command creates a new empty argument.', () => {
         cy.visit('http://localhost:5173/');
     
-        const element = cy.get('.sverminal-main').type('command').type(' ')
+        sverminalType('command');
+        sverminalType(' ');
     
         verifySelectionAndRange(2, ' \u200B');
         getActiveLine().then(commandLine => {
@@ -155,26 +156,29 @@ describe('sverminal user action - SPACE', () => {
     it('space key after an argument creates a new empty argument.', () => {
         cy.visit('http://localhost:5173/');
     
-        const element = cy.get('.sverminal-main').type('command').type(' ').type('arg1').type(' ');
-    
+        sverminalType('command');
+        sverminalType(' ');
+        sverminalType('arg1');
+        sverminalType(' ');
+
         verifySelectionAndRange(2, ' \u200B');
         getActiveLine().then(commandLine => {
           verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcommand', ' \u200Barg1', ' \u200B']);
         })
     
-    })
+    }) 
 
     it('space key at the beginning of an existing command pads whitespace to the beginning of the command.', () => {
         cy.visit('http://localhost:5173/');
     
-        cy.get('.sverminal-main').type('command');
+        sverminalType('command');
 
         getActiveLine().then(commandLine => {
             let command = commandLine.children().last();
             setCursor(command, 2);
         }) 
 
-        cy.get('.sverminal-main').type(' ');
+        sverminalType(' ');
 
         verifySelectionAndRange(3, ' \u200B command');
         getActiveLine().then(commandLine => {
@@ -186,14 +190,14 @@ describe('sverminal user action - SPACE', () => {
     it('space key in the middle of an existing command splits the text after the cursor into a new argument.', () => {
         cy.visit('http://localhost:5173/');
     
-        cy.get('.sverminal-main').type('command');
+        sverminalType('command');
 
         getActiveLine().then(commandLine => {
             let command = commandLine.children().last();
             setCursor(command, 5);
         }) 
 
-        cy.get('.sverminal-main').type(' ');
+        sverminalType(' ');
 
         verifySelectionAndRange(2, ' \u200Bmand');
         getActiveLine().then(commandLine => {
