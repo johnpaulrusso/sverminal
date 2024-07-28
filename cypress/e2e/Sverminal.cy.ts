@@ -1,4 +1,6 @@
 
+const STARTING_CURSOR_OFFSET = 2;
+
 function verifySelectionAndRange(expectedOffset: number, expectedText: string) {
     //Verify the initial cursor location.
     cy.window().then(window => {
@@ -21,6 +23,17 @@ function verifyLineContent(line: JQuery<HTMLElement>, expectedText: string[]) {
 
 function getActiveLine(): Cypress.Chainable<JQuery<HTMLElement>>{
     return cy.get('.sverminal-main').children().last();
+}
+
+function moveCursorInCurrentElement(offset: number){
+    getActiveLine().then(commandLine => {
+        let argument = commandLine.children().last();
+        setCursor(argument, offset);
+    }) 
+}
+
+function moveCursorToStartOfCurrentElement(){
+    moveCursorInCurrentElement(STARTING_CURSOR_OFFSET);
 }
 
 function setCursor(element: JQuery<HTMLElement>, offset: number) {
@@ -158,5 +171,84 @@ describe('sverminal user action - SPACE', () => {
           verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcom', ' \u200Bmand']);
         })
 
+    })
+  })
+
+
+  describe('sverminal user action - BACKSPACE', () => {
+
+    it('backspace from the initial cursor position should do nothing.', () => {
+        sverminalType('{backspace}');
+        verifySelectionAndRange(2, ' \u200B');
+    })
+    
+    it('backspace through leading whitespace removes leading whitespace.', () => {
+        sverminalType(' ');
+        sverminalType('{backspace}');
+        verifySelectionAndRange(2, ' \u200B');
+    })
+
+    it('backspace through single character command removes command.', () => {
+        sverminalType('c');
+        sverminalType('{backspace}');
+        verifySelectionAndRange(2, ' \u200B');
+    })
+
+    it('backspaces through multi character command removes command.', () => {
+        sverminalType('com');
+        sverminalType('{backspace}');
+        sverminalType('{backspace}');
+        sverminalType('{backspace}');
+        verifySelectionAndRange(2, ' \u200B');
+    })
+
+    it('backspace from empty argument removes argument.', () => {
+        sverminalType('command');
+        sverminalType(' ');
+        sverminalType('a');
+        sverminalType('{backspace}');
+        sverminalType('{backspace}');
+        verifySelectionAndRange(9, ' \u200Bcommand');
+        getActiveLine().then(commandLine => {
+            verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcommand']);
+        })
+    })
+
+    it('backspace in leading whitespace of populated argument does not remove argument.', () => {
+        sverminalType('command');
+        sverminalType(' ');
+        sverminalType('a');
+        moveCursorToStartOfCurrentElement();
+        sverminalType(' '); //add leading whitespace
+        sverminalType('{backspace}');
+        verifySelectionAndRange(2, ' \u200Ba');
+        getActiveLine().then(commandLine => {
+            verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcommand', ' \u200Ba']);
+        })
+    })
+
+    it('backspace in leading whitespace of empty argument does not remove argument.', () => {
+        sverminalType('command');
+        sverminalType(' ');
+        sverminalType('a');
+        moveCursorToStartOfCurrentElement();
+        sverminalType(' '); //add leading whitespace
+        moveCursorInCurrentElement(4);
+        sverminalType('{backspace}'); //remove the 'a'
+        sverminalType('{backspace}'); //remove the leading whitespace
+        verifySelectionAndRange(2, ' \u200B');
+        getActiveLine().then(commandLine => {
+            verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcommand', ' \u200B']);
+        })
+    })
+    
+    it('backspace from populated argument joins argument to previous item.', () => {
+        sverminalType('command arg');
+        moveCursorToStartOfCurrentElement();
+        sverminalType('{backspace}');
+        verifySelectionAndRange(9, ' \u200Bcommandarg');
+        getActiveLine().then(commandLine => {
+            verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcommandarg']);
+        })
     })
   })
