@@ -73,11 +73,11 @@ Cypress.Commands.add('getActiveLine', (): Cypress.Chainable<JQuery<HTMLElement>>
     return cy.get('.sverminal-main').children().last();
 });
 
-Cypress.Commands.add('moveCursorToStartOfCurrentElement', () => { 
-    cy.moveCursorInCurrentElement(STARTING_CURSOR_OFFSET);
+Cypress.Commands.add('moveCursorToStartOfLastElement', () => { 
+    cy.moveCursorInLastElement(STARTING_CURSOR_OFFSET);
 });
 
-Cypress.Commands.add('moveCursorInCurrentElement', (offset: number) => { 
+Cypress.Commands.add('moveCursorInLastElement', (offset: number) => { 
     cy.getActiveLine().then(commandLine => {
         let argument = commandLine.children().last();
         cy.setCursor(argument, offset);
@@ -107,8 +107,8 @@ declare global {
      interface Chainable {
         sverminalType(text: string): Chainable<void>
         setCursor(element: JQuery<HTMLElement>, offset: number): Chainable<void>
-        moveCursorInCurrentElement(offset: number): Chainable<void>
-        moveCursorToStartOfCurrentElement(): Chainable<void>
+        moveCursorInLastElement(offset: number): Chainable<void>
+        moveCursorToStartOfLastElement(): Chainable<void>
         getActiveLine(): Chainable<JQuery<HTMLElement>>
         verifyLineContent(line: JQuery<HTMLElement>, expectedText: string[]): Chainable<void>
         verifySelectionAndRange(expectedOffset: number, expectedText: string): Chainable<void>

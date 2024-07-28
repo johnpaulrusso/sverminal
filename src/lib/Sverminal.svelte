@@ -201,14 +201,19 @@
 
 	function appendNewArg(arg: string = '') {
 		let argSpan = new SverminalUserSpan(config.style.text, arg);
-        userSpans.push(argSpan);
 
 		workingChildIndex++;
 		if (workingChildIndex >= workingCommandLineDiv.children.length) {
 			workingCommandLineDiv.appendChild(argSpan.element());
+            userSpans.push(argSpan);
 			placeCursorAtWorkingIndex();
 			console.log('new arg last!');
 		} else {
+            userSpans = [
+                ...userSpans.slice(0, workingChildIndex - 1), 
+                argSpan, 
+                ...userSpans.slice(workingChildIndex - 1)
+            ]
 			workingCommandLineDiv.insertBefore(
 				argSpan.element(),
 				workingCommandLineDiv.children[workingChildIndex]

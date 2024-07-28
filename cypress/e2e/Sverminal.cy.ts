@@ -92,7 +92,7 @@ describe('sverminal user action - SPACE', () => {
 
     it('space key at the beginning of an existing command pads whitespace to the beginning of the command.', () => {
         cy.sverminalType('command');
-        cy.moveCursorToStartOfCurrentElement();
+        cy.moveCursorToStartOfLastElement();
         cy.sverminalType(' ');
         cy.verifySelectionAndRange(3, ' \u200B command');
         cy.getActiveLine().then(commandLine => {
@@ -101,13 +101,30 @@ describe('sverminal user action - SPACE', () => {
     
     })
 
-    it('space key in the middle of an existing command splits the text after the cursor into a new argument.', () => {
+    it('space key in the middle of lone command splits the text after the cursor into a new argument.', () => {
         cy.sverminalType('command');
-        cy.moveCursorInCurrentElement(5);
+        cy.moveCursorInLastElement(5);
         cy.sverminalType(' ');
         cy.verifySelectionAndRange(2, ' \u200Bmand');
         cy.getActiveLine().then(commandLine => {
           cy.verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcom', ' \u200Bmand']);
+        })
+
+    })
+
+    it('space key in the middle of a command before one or more arguments splits the text after the cursor into a new argument.', () => {
+        cy.sverminalType('command');
+        cy.sverminalType(' ');
+        cy.sverminalType('a');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.verifySelectionAndRange(7, ' \u200Bcommand');
+        cy.sverminalType(' ');
+        cy.verifySelectionAndRange(2, ' \u200Bnd');
+        cy.getActiveLine().then(commandLine => {
+          cy.verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcomma', ' \u200Bnd', ' \u200Ba']);
         })
 
     })
@@ -157,7 +174,7 @@ describe('sverminal user action - SPACE', () => {
         cy.sverminalType('command');
         cy.sverminalType(' ');
         cy.sverminalType('a');
-        cy.moveCursorToStartOfCurrentElement();
+        cy.moveCursorToStartOfLastElement();
         cy.sverminalType(' '); //add leading whitespace
         cy.sverminalType('{backspace}');
         cy.verifySelectionAndRange(2, ' \u200Ba');
@@ -170,9 +187,9 @@ describe('sverminal user action - SPACE', () => {
         cy.sverminalType('command');
         cy.sverminalType(' ');
         cy.sverminalType('a');
-        cy.moveCursorToStartOfCurrentElement();
+        cy.moveCursorToStartOfLastElement();
         cy.sverminalType(' '); //add leading whitespace
-        cy.moveCursorInCurrentElement(4);
+        cy.moveCursorInLastElement(4);
         cy.sverminalType('{backspace}'); //remove the 'a'
         cy.sverminalType('{backspace}'); //remove the leading whitespace
         cy.verifySelectionAndRange(2, ' \u200B');
@@ -183,7 +200,7 @@ describe('sverminal user action - SPACE', () => {
     
     it('backspace from populated argument joins argument to previous item.', () => {
         cy.sverminalType('command arg');
-        cy.moveCursorToStartOfCurrentElement();
+        cy.moveCursorToStartOfLastElement();
         cy.sverminalType('{backspace}');
         cy.verifySelectionAndRange(9, ' \u200Bcommandarg');
         cy.getActiveLine().then(commandLine => {
@@ -239,21 +256,21 @@ describe('sverminal user action - SPACE', () => {
     
     it('right arrow through leading whitespace.', () => {
         cy.sverminalType(' ');
-        cy.moveCursorToStartOfCurrentElement();
+        cy.moveCursorToStartOfLastElement();
         cy.sverminalType('{rightArrow}');
         cy.verifySelectionAndRange(3, ' \u200B ');
     })
 
     it('right arrow through single character command.', () => {
         cy.sverminalType('c');
-        cy.moveCursorToStartOfCurrentElement();
+        cy.moveCursorToStartOfLastElement();
         cy.sverminalType('{rightArrow}');
         cy.verifySelectionAndRange(3, ' \u200Bc');
     })
 
     it('right arrows through multi character command.', () => {
         cy.sverminalType('com');
-        cy.moveCursorToStartOfCurrentElement();
+        cy.moveCursorToStartOfLastElement();
         cy.sverminalType('{rightArrow}');
         cy.sverminalType('{rightArrow}');
         cy.sverminalType('{rightArrow}');
