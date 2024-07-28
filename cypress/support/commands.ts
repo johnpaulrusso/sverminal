@@ -35,3 +35,83 @@
 //     }
 //   }
 // }
+
+export const STARTING_CURSOR_OFFSET = 2;
+
+export function verifySelectionAndRange(expectedOffset: number, expectedText: string) {
+    //Verify the initial cursor location.
+    cy.window().then(window => {
+        const selection = window.getSelection();
+        expect(selection.rangeCount).equals(1);
+
+        const range = selection.getRangeAt(0);
+        expect(range.commonAncestorContainer.textContent).equals(expectedText);
+        expect(range.startOffset).equals(expectedOffset);
+    })
+}
+
+Cypress.Commands.add('verifySelectionAndRange', (expectedOffset: number, expectedText: string) => { 
+    cy.window().then(window => {
+        const selection = window.getSelection();
+        expect(selection.rangeCount).equals(1);
+
+        const range = selection.getRangeAt(0);
+        expect(range.commonAncestorContainer.textContent).equals(expectedText);
+        expect(range.startOffset).equals(expectedOffset);
+    })
+});
+
+Cypress.Commands.add('verifyLineContent', (line: JQuery<HTMLElement>, expectedText: string[]) => { 
+    expect(line.children().length).equals(expectedText.length);
+    line.children().toArray().forEach((child, index) => {
+        expect(child.tagName).equals('SPAN')
+        expect(child.innerHTML).equals(expectedText[index]);
+    })
+});
+
+Cypress.Commands.add('getActiveLine', (): Cypress.Chainable<JQuery<HTMLElement>> => { 
+    return cy.get('.sverminal-main').children().last();
+});
+
+Cypress.Commands.add('moveCursorToStartOfCurrentElement', () => { 
+    cy.moveCursorInCurrentElement(STARTING_CURSOR_OFFSET);
+});
+
+Cypress.Commands.add('moveCursorInCurrentElement', (offset: number) => { 
+    cy.getActiveLine().then(commandLine => {
+        let argument = commandLine.children().last();
+        cy.setCursor(argument, offset);
+    }) 
+});
+
+Cypress.Commands.add('setCursor', (element: JQuery<HTMLElement>, offset: number) => { 
+    cy.window().then(window => {
+        const selection = window.getSelection();    
+        const range = window.document.createRange();
+        range.setStart(element.get(0).firstChild, offset);
+        range.collapse(true);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+    })
+});
+
+Cypress.Commands.add('sverminalType', (text: string) => { 
+    cy.get('.sverminal-main')
+        .should('be.visible')
+        .wait(100) //Making this shorter can cause random failures on chromium browsers.
+        .type(text, { delay: 10 });
+});
+
+declare global {
+   namespace Cypress {
+     interface Chainable {
+        sverminalType(text: string): Chainable<void>
+        setCursor(element: JQuery<HTMLElement>, offset: number): Chainable<void>
+        moveCursorInCurrentElement(offset: number): Chainable<void>
+        moveCursorToStartOfCurrentElement(): Chainable<void>
+        getActiveLine(): Chainable<JQuery<HTMLElement>>
+        verifyLineContent(line: JQuery<HTMLElement>, expectedText: string[]): Chainable<void>
+        verifySelectionAndRange(expectedOffset: number, expectedText: string): Chainable<void>
+     }
+   }
+}
