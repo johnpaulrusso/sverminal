@@ -191,3 +191,41 @@ describe('sverminal user action - SPACE', () => {
         })
     })
   })
+
+
+  describe('sverminal user action - LEFT ARROW', () => {
+
+    it('left arrow key from the initial cursor position should do nothing.', () => {
+        cy.sverminalType('{leftArrow}')
+        cy.verifySelectionAndRange(2, ' \u200B');
+    })
+    
+    it('left arrow through leading whitespace.', () => {
+        cy.sverminalType(' ');
+        cy.sverminalType('{leftArrow}');
+        cy.verifySelectionAndRange(2, ' \u200B ');
+    })
+
+    it('left arrow through single character command.', () => {
+        cy.sverminalType('c');
+        cy.sverminalType('{leftArrow}');
+        cy.verifySelectionAndRange(2, ' \u200Bc');
+    })
+
+    it('left arrows through multi character command.', () => {
+        cy.sverminalType('com');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.verifySelectionAndRange(2, ' \u200Bcom');
+    })
+
+    it('left arrow from beginning of argument decrements the active item.', () => {
+        cy.sverminalType('command');
+        cy.sverminalType(' ');
+        cy.sverminalType('a');
+        cy.sverminalType('{leftArrow}'); //back to start of arg.
+        cy.sverminalType('{leftArrow}'); 
+        cy.verifySelectionAndRange(9, ' \u200Bcommand');
+    })
+  })
