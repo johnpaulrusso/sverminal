@@ -229,3 +229,44 @@ describe('sverminal user action - SPACE', () => {
         cy.verifySelectionAndRange(9, ' \u200Bcommand');
     })
   })
+
+  describe('sverminal user action - RIGHT ARROW', () => {
+
+    it('right arrow key from the initial cursor position should do nothing.', () => {
+        cy.sverminalType('{rightArrow}')
+        cy.verifySelectionAndRange(2, ' \u200B');
+    })
+    
+    it('right arrow through leading whitespace.', () => {
+        cy.sverminalType(' ');
+        cy.moveCursorToStartOfCurrentElement();
+        cy.sverminalType('{rightArrow}');
+        cy.verifySelectionAndRange(3, ' \u200B ');
+    })
+
+    it('right arrow through single character command.', () => {
+        cy.sverminalType('c');
+        cy.moveCursorToStartOfCurrentElement();
+        cy.sverminalType('{rightArrow}');
+        cy.verifySelectionAndRange(3, ' \u200Bc');
+    })
+
+    it('right arrows through multi character command.', () => {
+        cy.sverminalType('com');
+        cy.moveCursorToStartOfCurrentElement();
+        cy.sverminalType('{rightArrow}');
+        cy.sverminalType('{rightArrow}');
+        cy.sverminalType('{rightArrow}');
+        cy.verifySelectionAndRange(5, ' \u200Bcom');
+    })
+
+    it('right arrow from end of argument increments the active item.', () => {
+        cy.sverminalType('command');
+        cy.sverminalType(' ');
+        cy.sverminalType('a');
+        cy.sverminalType('{leftArrow}'); //back to start of arg.
+        cy.sverminalType('{leftArrow}'); 
+        cy.sverminalType('{rightArrow}');
+        cy.verifySelectionAndRange(2, ' \u200Ba');
+    })
+  })
