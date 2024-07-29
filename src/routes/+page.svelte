@@ -111,8 +111,22 @@
 <div class="w-full flex flex-col justify-center items-center text-center p-4 md:p-8 gap-2 md:gap-4">
 	<h1 class="text-5xl md:text-7xl font-mono font-bold">SVERMINAL</h1>
 	<h3 class="text-sm md:text-base font-mono">Terminal emulator built on Svelte and Tailwind</h3>
+
+    <div class="w-full p-4">
+        <Sverminal processor={processCommand} writer={sverminalWriter} />
+    </div>
+    
+    <div class="w-full p-4 text-left">
+        <h3 class="text-xl ">Demo Commands</h3>
+        <ul class="list-disc py-4 px-8">
+            <li>echo &lt;message&gt;</li>
+            <li>warn &lt;message&gt;</li>
+            <li>error &lt;message&gt;</li>
+            <li>info &lt;message&gt;</li>
+            <li>countdown &lt;number&gt; where number is a positive integer between 0 and 100</li>
+        </ul>
+
+    </div>
 </div>
 
-<div class="p-4">
-	<Sverminal processor={processCommand} writer={sverminalWriter} />
-</div>
+
