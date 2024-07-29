@@ -288,7 +288,7 @@ describe('sverminal user action - SPACE', () => {
     })
   })
 
-  describe('sverminal user action - PASTE', () => {
+  describe.only('sverminal user action - PASTE', () => {
 
     it('paste empty clipboard into an empty line', () => {
         cy.sverminalPaste('')
@@ -331,6 +331,14 @@ describe('sverminal user action - SPACE', () => {
         cy.verifySelectionAndRange(7, ' \u200B  arg');
         cy.getActiveLine().then(commandLine => {
             cy.verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcommand', ' \u200B  arg']);
+        })
+    })
+
+    it.only('paste two words with tab spaces into an empty line', () => {
+        cy.sverminalPaste("command  arg")
+        cy.verifySelectionAndRange(6, ' \u200B arg'); 
+        cy.getActiveLine().then(commandLine => {
+            cy.verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcommand', ' \u200B arg']);
         })
     })
 

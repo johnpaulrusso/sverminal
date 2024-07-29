@@ -279,11 +279,12 @@
         }
 	}
 
-    function splitStringWithSpaces(input: string): string[] {
-        const regex = /\S+|\s/g;
+    function splitStringWithSpacesAndTabs(input: string): string[] {
+        const regex = /\S+|[ \u0009]/g;
         const result = input.match(regex);
-        return result ? result : []; 
+        return result ? result : [];
     }
+
     
 	function insertText(text: string) {
 		const selection = window.getSelection();
@@ -292,11 +293,11 @@
 			return;
 		}
 
-        const textparts = splitStringWithSpaces(text);
+        const textparts = splitStringWithSpacesAndTabs(text);
     
         textparts.forEach((part: string, index, arr) => { 
             const span = userSpans[workingChildIndex - 1];
-            if(part === ' '){
+            if(part === ' ' || part === '\u0009'){
                 insertSimulatedSpace();
             }else{
                 span.insertAtCursorPosition(part);
