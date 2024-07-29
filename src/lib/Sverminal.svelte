@@ -132,36 +132,6 @@
         userSpans.push(commandSpan);
 	}
 
-	function placeCursorInTextNode(textnode: Text, offset: number) {
-		const range = document.createRange();
-		const selection = window.getSelection();
-		range.setStart(textnode, offset);
-		range.collapse(true);
-		selection?.removeAllRanges();
-		selection?.addRange(range);
-	}
-
-	function getWorkingTextNodeOrCreateIfNull(): Text {
-		const childspan = workingCommandLineDiv.children.item(workingChildIndex) as Element;
-		let textnode = childspan.firstChild as Text | null;
-		if (!textnode) {
-			let emptyTextnode: Text = new Text('');
-			childspan.appendChild(emptyTextnode);
-			textnode = emptyTextnode;
-		}
-		return textnode;
-	}
-
-    function getWorkingTextNodeTextContext(): string {
-		const childspan = workingCommandLineDiv.children.item(workingChildIndex) as Element;
-		let textnode = childspan.firstChild as Text | null;
-		if (!textnode || !textnode.textContent) {
-            console.error('sverminal error: working text node or text context null.');
-			return '';
-		}
-		return textnode.textContent;
-	}
-
 	function placeCursorAtWorkingIndex(start: boolean = false) {
 		if (workingChildIndex >= workingCommandLineDiv.children.length) {
 			console.error('Failed to place cursor in Sverminal!');
@@ -346,10 +316,6 @@
 			return;
 		}
 
-		let parts = historicalCommand.split(' ').filter((part) => part != ' ');
-		let command = parts.at(0);
-		let args = parts.slice(1);
-
 		//Clear the command! This should probably be its own function.
 		for (; workingChildIndex > 0; --workingChildIndex) {
 			let childToRemove = workingCommandLineDiv.children.item(workingChildIndex);
@@ -357,15 +323,11 @@
 				workingCommandLineDiv.removeChild(childToRemove);
 			}
 		}
+        userSpans = [];
 		workingChildIndex = CommandIndex.COMMAND;
-		appendCommand(command);
-		args.forEach((arg) => {
-			appendNewArg(arg);
-			insertSimulatedSpace();
-		});
-		formatArgs();
-		workingChildIndex = parts.length;
-		placeCursorAtWorkingIndex();
+        appendCommand();
+        placeCursorAtWorkingIndex();
+		insertText(historicalCommand);
 	}
 
     function onKeyDownEnter(event: KeyboardEvent){

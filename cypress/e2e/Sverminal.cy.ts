@@ -334,7 +334,7 @@ describe('sverminal user action - SPACE', () => {
         })
     })
 
-    it.only('paste two words with tab spaces into an empty line', () => {
+    it('paste two words with tab spaces into an empty line', () => {
         cy.sverminalPaste("command  arg")
         cy.verifySelectionAndRange(6, ' \u200B arg'); 
         cy.getActiveLine().then(commandLine => {
