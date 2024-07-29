@@ -38,18 +38,6 @@
 
 export const STARTING_CURSOR_OFFSET = 2;
 
-export function verifySelectionAndRange(expectedOffset: number, expectedText: string) {
-    //Verify the initial cursor location.
-    cy.window().then(window => {
-        const selection = window.getSelection();
-        expect(selection.rangeCount).equals(1);
-
-        const range = selection.getRangeAt(0);
-        expect(range.commonAncestorContainer.textContent).equals(expectedText);
-        expect(range.startOffset).equals(expectedOffset);
-    })
-}
-
 Cypress.Commands.add('verifySelectionAndRange', (expectedOffset: number, expectedText: string) => { 
     cy.window().then(window => {
         const selection = window.getSelection();
@@ -102,6 +90,29 @@ Cypress.Commands.add('sverminalType', (text: string) => {
         .type(text, { delay: 10 });
 });
 
+Cypress.Commands.add('paste', { prevSubject: true }, (subject, text: string) => {
+    const pasteEvent = new ClipboardEvent('paste', {
+      bubbles: true,
+      cancelable: true,
+      clipboardData: new DataTransfer()
+    });
+  
+    pasteEvent.clipboardData.setData('text/plain', text);
+  
+    subject[0].dispatchEvent(pasteEvent);
+    return cy.wrap(subject);
+});
+
+Cypress.Commands.add('sverminalPaste', (text: string) => { 
+    cy.wait(100); //This is required for tests to pass on chromium browsers.
+    cy.get('.sverminal-main')
+        .should('be.visible')
+        .wait(100) //Making this shorter can cause random failures on chromium browsers.
+        .focus() //This is required for tests to pass on chromium browsers.
+        .paste(text);
+    cy.wait(100);
+});
+
 declare global {
    namespace Cypress {
      interface Chainable {
@@ -112,6 +123,10 @@ declare global {
         getActiveLine(): Chainable<JQuery<HTMLElement>>
         verifyLineContent(line: JQuery<HTMLElement>, expectedText: string[]): Chainable<void>
         verifySelectionAndRange(expectedOffset: number, expectedText: string): Chainable<void>
+        sverminalPaste(text: string): Chainable<void>
+     }
+     interface Chainable<Subject>{
+        paste(text: string): Chainable<Subject>;
      }
    }
 }

@@ -146,6 +146,20 @@ export class SverminalUserSpan extends SverminalSpan{
         this.placeCursor(this.textnode.length);
     }
 
+    private cursorPosition(): number {
+        const selection = window.getSelection();
+        if(!selection){
+            return SpanPosition.NONE;
+        } 
+
+        const range = selection.getRangeAt(0);
+        if(!range){
+            return SpanPosition.NONE;
+        }
+
+        return range.startOffset;
+    }
+
     /**
      * split removes the text to be split based on the current cursor location.
      * @returns The removed text needed to create the new argument.
@@ -188,5 +202,31 @@ export class SverminalUserSpan extends SverminalSpan{
         }
 
         this.textnode.textContent += text;
+    }
+ 
+    prepend(text: string){
+        if(this.textnode.textContent === null){
+            throw new Error('This should never occur!') 
+        }
+        const temp = ` ${ZERO_WIDTH_SPACE}${text}${this.textnode.textContent.substring(SverminalUserSpan.BASE_LENGTH)}`;
+        this.textnode.textContent = temp;
+        this.placeCursor(SverminalUserSpan.BASE_LENGTH + 1);
+    }
+
+    insertAtCursorPosition(text: string){
+        if(this.textnode.textContent === null){
+            throw new Error('This should never occur!') 
+        }
+
+        if(this.position() < SpanPosition.USER_START){
+            console.warn('Sverminal cursor position invalid.') 
+            return;
+        }
+        
+        const cursorPos = this.cursorPosition();
+        const before = this.textnode.textContent.substring(0, cursorPos);
+        const after = this.textnode.textContent.substring(cursorPos);
+        this.textnode.textContent = `${before}${text}${after}`;
+        this.placeCursor(before.length + text.length);
     }
 }

@@ -272,50 +272,37 @@
 	}
 
 	function insertSimulatedSpace() {
-		const workingTextNode = getWorkingTextNodeOrCreateIfNull();
-		workingTextNode.textContent = ` ${workingTextNode.textContent}`;
+        if(!performSpace()){
+            //We need to specifically handle this case. 
+            const span = userSpans[workingChildIndex - 1];
+            span.insertAtCursorPosition(' ');
+        }
 	}
 
+    function splitStringWithSpaces(input: string): string[] {
+        const regex = /\S+|\s/g;
+        const result = input.match(regex);
+        return result ? result : []; 
+    }
+    
 	function insertText(text: string) {
 		const selection = window.getSelection();
-		const range = selection?.getRangeAt(0);
-		if (!range) {
+		const range = selection?.getRangeAt(0); 
+		if (!range) { 
 			return;
 		}
 
-		const cachedWorkingIndex = workingChildIndex;
-		const workingTextNode = getWorkingTextNodeOrCreateIfNull();
-		const workingTextLength = workingTextNode.textContent?.length ?? 0;
-		const isSplit = range.startOffset < workingTextLength;
+        const textparts = splitStringWithSpaces(text);
+    
+        textparts.forEach((part: string, index, arr) => { 
+            const span = userSpans[workingChildIndex - 1];
+            if(part === ' '){
+                insertSimulatedSpace();
+            }else{
+                span.insertAtCursorPosition(part);
+            }
+        });
 
-		const textparts = text.split(' ');
-
-		if (isSplit) {
-			splitWorkingSpan();
-			insertSimulatedSpace();
-			workingChildIndex = cachedWorkingIndex;
-		}
-
-		textparts.forEach((part: string, index, arr) => {
-			if (index == 0) {
-				const workingTextNode = getWorkingTextNodeOrCreateIfNull();
-				workingTextNode.textContent += part;
-			} else if (index < arr.length - 1 || !isSplit) {
-				appendNewArg(part);
-				insertSimulatedSpace();
-			} else {
-				//Prepend to the next arg... This behavior depends on if we split the current text or not.
-				workingChildIndex++;
-				const workingTextNodeToAppend = getWorkingTextNodeOrCreateIfNull();
-				workingTextNodeToAppend.textContent = `${part}${workingTextNodeToAppend.textContent?.trim()}`;
-				insertSimulatedSpace();
-				placeCursorInTextNode(workingTextNodeToAppend, part.length + 1);
-			}
-		});
-
-		if (!isSplit) {
-			placeCursorAtWorkingIndex();
-		}
 	}
 
 	function lockCommand() {
@@ -397,17 +384,23 @@
      */
     function onKeyDownSpace(event: KeyboardEvent){
         historyIndex = -1;
-        const span = userSpans[workingChildIndex - 1];
+        if(performSpace()){
+            event.preventDefault();
+        }
+    }
 
+    function performSpace(): boolean{
+        const span = userSpans[workingChildIndex - 1];
+        let preventDefault = false;
         if(span.populated())
         {   
             if (span.position() === SpanPosition.MIDDLE) {
-                event.preventDefault();
+                preventDefault = true;
                 splitWorkingSpan(); //TODO
                 placeCursorAtWorkingIndex(true);
                 console.log('space split!');
             } else if (span.position() === SpanPosition.END) {
-                event.preventDefault();
+                preventDefault = true; 
                 appendNewArg();
                 console.log('space new!');
             } else {
@@ -416,6 +409,7 @@
         } else {
             console.log('space nominal!');
         }
+        return preventDefault;
     }
 
     function onKeyDownBackspace(event: KeyboardEvent){
@@ -507,7 +501,6 @@
 		if (event.clipboardData) {
 			const textToPaste = event.clipboardData.getData('text');
 			if (textToPaste.length > 0) {
-				console.log(textToPaste);
 				insertText(textToPaste);
 			}
 		}

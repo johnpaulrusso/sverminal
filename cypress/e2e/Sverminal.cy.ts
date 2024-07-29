@@ -283,7 +283,174 @@ describe('sverminal user action - SPACE', () => {
         cy.sverminalType('a');
         cy.sverminalType('{leftArrow}'); //back to start of arg.
         cy.sverminalType('{leftArrow}'); 
-        cy.sverminalType('{rightArrow}');
+        cy.sverminalType('{rightArrow}'); 
         cy.verifySelectionAndRange(2, ' \u200Ba');
     })
   })
+
+  describe('sverminal user action - PASTE', () => {
+
+    it('paste empty clipboard into an empty line', () => {
+        cy.sverminalPaste('')
+        cy.verifySelectionAndRange(2, ' \u200B');  
+    })
+
+    it('paste whitespace into an empty line', () => { 
+        cy.sverminalPaste(' ')
+        cy.verifySelectionAndRange(3, ' \u200B ');
+    })
+
+    it('paste single character into an empty line', () => {
+        cy.sverminalPaste('c')
+        cy.verifySelectionAndRange(3, ' \u200Bc');
+    })
+
+    it('paste single word into an empty line', () => {
+        cy.sverminalPaste('command')
+        cy.verifySelectionAndRange(9, ' \u200Bcommand');
+    })
+
+    it('paste two words into an empty line', () => {
+        cy.sverminalPaste('command arg')
+        cy.verifySelectionAndRange(5, ' \u200Barg');
+        cy.getActiveLine().then(commandLine => {
+            cy.verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcommand', ' \u200Barg']);
+        })
+    })
+
+    it('paste three words into an empty line', () => {
+        cy.sverminalPaste('command arg1 arg2')
+        cy.verifySelectionAndRange(6, ' \u200Barg2');
+        cy.getActiveLine().then(commandLine => {
+            cy.verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcommand', ' \u200Barg1', ' \u200Barg2']);
+        })
+    })
+
+    it('paste two words with extra spaces into an empty line', () => {
+        cy.sverminalPaste('command   arg')
+        cy.verifySelectionAndRange(7, ' \u200B  arg');
+        cy.getActiveLine().then(commandLine => {
+            cy.verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcommand', ' \u200B  arg']);
+        })
+    })
+
+    it('paste empty clipboard at beginning of existing line', () => {
+        cy.sverminalType('com');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalPaste('')
+        cy.verifySelectionAndRange(2, ' \u200Bcom');  
+    })
+
+    it('paste whitespace at beginning of existing line', () => {
+        cy.sverminalType('com');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalPaste(' ')
+        cy.verifySelectionAndRange(3, ' \u200B com');  
+    })
+
+    it('paste single character at beginning of existing line', () => {
+        cy.sverminalType('com');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalPaste('m')
+        cy.verifySelectionAndRange(3, ' \u200Bmcom');  
+    })
+
+    it('paste single word at beginning of existing line', () => {
+        cy.sverminalType('com');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalPaste('mand')
+        cy.verifySelectionAndRange(6, ' \u200Bmandcom');  
+    })
+
+    it('paste two words at beginning of existing line', () => {
+        cy.sverminalType('com');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalPaste('hello world')
+        cy.verifySelectionAndRange(7, ' \u200Bworldcom');  
+        cy.getActiveLine().then(commandLine => {
+            cy.verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bhello', ' \u200Bworldcom']);
+        })
+    })
+
+    it('paste three words at beginning of existing line', () => {
+        cy.sverminalType('com');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalPaste('hello world again')
+        cy.verifySelectionAndRange(7, ' \u200Bagaincom');  
+        cy.getActiveLine().then(commandLine => {
+            cy.verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bhello', ' \u200Bworld', ' \u200Bagaincom']);
+        })
+    })
+
+    it('paste two words with extra spaces at beginning of existing line', () => {
+        cy.sverminalType('com');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalPaste('hello   world')
+        cy.verifySelectionAndRange(9, ' \u200B  worldcom');  
+        cy.getActiveLine().then(commandLine => {
+            cy.verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bhello', ' \u200B  worldcom']);
+        })
+    })
+
+    it('paste empty clipboard in the middle of an existing word', () => {
+        cy.sverminalType('com');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalPaste('')
+        cy.verifySelectionAndRange(4, ' \u200Bcom');  
+    })
+
+    it('paste whitespace in the middle of an existing word', () => {
+        cy.sverminalType('com');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalPaste(' ')
+        cy.verifySelectionAndRange(2, ' \u200Bm');  
+        cy.getActiveLine().then(commandLine => {
+            cy.verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bco', ' \u200Bm']);
+        })
+    })
+
+    it('paste single character in the middle of an existing word', () => {
+        cy.sverminalType('com');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalPaste('x')
+        cy.verifySelectionAndRange(5, ' \u200Bcoxm');  
+        cy.getActiveLine().then(commandLine => {
+            cy.verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcoxm']);
+        })
+    })
+
+    it('paste single word in the middle of an existing word', () => {
+        cy.sverminalType('com');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalPaste('hello')
+        cy.verifySelectionAndRange(9, ' \u200Bcohellom');  
+        cy.getActiveLine().then(commandLine => {
+            cy.verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcohellom']);
+        })
+    })
+
+    it('paste two words in the middle of an existing word', () => {
+        cy.sverminalType('com');
+        cy.sverminalType('{leftArrow}');
+        cy.sverminalPaste('hello world')
+        cy.verifySelectionAndRange(7, ' \u200Bworldm');  
+        cy.getActiveLine().then(commandLine => {
+            cy.verifyLineContent(commandLine, ['sverminal&gt;', ' \u200Bcohello', ' \u200Bworldm']);
+        })
+    })
+
+  }) 
