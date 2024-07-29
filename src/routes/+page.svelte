@@ -2,6 +2,7 @@
 	import '../app.css';
 	import Sverminal from '$lib/Sverminal.svelte';
 	import { SverminalWriter } from '$lib/writer/writer.js';
+    import customConfig from '$lib/sverminal.config.js';
 
 	let sverminalWriter = new SverminalWriter();
 
@@ -113,7 +114,12 @@
 	<h3 class="text-sm md:text-base font-mono">Terminal emulator built on Svelte and Tailwind</h3>
 
     <div class="w-full p-4">
-        <Sverminal processor={processCommand} writer={sverminalWriter} />
+        <Sverminal 
+            processor={processCommand} 
+            writer={sverminalWriter} 
+            promptPrefix="sverminal" 
+            config={customConfig} 
+        />
     </div>
     
     <div class="w-full p-4 text-left">
@@ -125,7 +131,8 @@
             <li>info &lt;message&gt;</li>
             <li>countdown &lt;number&gt; where number is a positive integer between 0 and 100</li>
         </ul>
-
+        <a class="w-full text-left text-xl font-medium text-blue-600 dark:text-blue-500 hover:underline" 
+        href="https://github.com/johnpaulrusso/sverminal?tab=readme-ov-file#readme">Documentation</a>
     </div>
 </div>
 

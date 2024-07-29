@@ -30,6 +30,9 @@ export default {
     import Sverminal from 'sverminal';
     import { SverminalWriter } from 'sverminal/writer';
 
+    //Optionally import a custom configuration.
+    import customConfig from '$lib/sverminal.config.js';
+
     //Use the writer to output text to the terminal.
     let writer = new SverminalWriter();
 
@@ -43,5 +46,35 @@ export default {
 ```
 
 ```svelte
-<Sverminal {processor} {writer}/>
+<Sverminal 
+    processor={processCommand} 
+    writer={sverminalWriter} 
+    promptPrefix="sverminal" 
+    config={customConfig} 
+/>
+```
+
+### Configuration
+
+```javascript
+const customConfig = {
+	promptSuffix: '>',
+	style: {
+        //Arrays of CSS classes to be applied to each type of text.
+		prompt: ['text-emerald-400', 'font-bold'],
+		command: ['text-violet-400'],
+		flags: ['text-slate-400'], //Any argument prefixed by a '-' is considered a flag.
+		info: ['text-cyan-400'],
+		error: ['text-red-400'],
+		warn: ['text-yellow-400'],
+		text: ['text-slate-50']
+	},
+	history: {
+		enabled: true,
+		method: 'memory', //memory (default), sessionstorage, localstorage
+		limit: 10 //Max number of history entries.
+	},
+	newlineBetweenCommands: false //Set this to true if you want an extra line between commands.
+};
+export default customConfig;
 ```
