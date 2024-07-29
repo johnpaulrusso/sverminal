@@ -25,15 +25,14 @@
 
 	$: promptText = `${promptPrefix}${config.promptSuffix}`;
 
-    const ZERO_WIDTH_SPACE: string = '\u200B';
     const ZERO_WIDTH_SPACE_REGEX: RegExp = /\u200B/g;
-    const BASE_SPAN_LENGTH: number = ZERO_WIDTH_SPACE.length;
 
 	let sverminalDiv: HTMLDivElement;
 	let workingCommandLineDiv: HTMLDivElement;
 	let workingChildIndex: number = CommandIndex.COMMAND;
 	let historyIndex = -1;
     let userSpans: SverminalUserSpan[] = [];
+    let commandInProgress = false;
 
 	let commandHistory = createCommandHistory();
 
@@ -67,10 +66,12 @@
 	async function handleCommand(command: string) {
 		try {
 			lockCommand();
+            commandInProgress = true;
 			await processor(command);
 		} catch (error) {
 			sverror(`Failed to process command: ${command} - Error: ${error}`);
 		} finally {
+            
 			if (config.newlineBetweenCommands) {
 				appendEmptyLine();
 			}
@@ -78,6 +79,7 @@
 
 			//Regardless of the result, save the command in history.
 			commandHistory.push(command);
+            commandInProgress = false;
 		}
 	}
 
@@ -87,6 +89,7 @@
 		emptyLine.classList.add(...config.style.text);
 		emptyLine.innerHTML = ` `;
 		sverminalDiv.appendChild(emptyLine);
+        sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
 	}
 
 	function svecho(message: string) {
@@ -95,6 +98,7 @@
 		line.setAttribute('contenteditable', 'false');
 		line.classList.add(...config.style.text);
 		sverminalDiv.appendChild(line);
+        sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
 	}
 
 	function svwarn(message: string) {
@@ -103,6 +107,7 @@
 		line.setAttribute('contenteditable', 'false');
 		line.classList.add(...config.style.warn);
 		sverminalDiv.appendChild(line);
+        sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
 	}
 
 	function sverror(message: string) {
@@ -111,6 +116,7 @@
 		line.setAttribute('contenteditable', 'false');
 		line.classList.add(...config.style.error);
 		sverminalDiv.appendChild(line);
+        sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
 	}
 
 	function svinfo(message: string) {
@@ -119,6 +125,7 @@
 		line.setAttribute('contenteditable', 'false');
 		line.classList.add(...config.style.info);
 		sverminalDiv.appendChild(line);
+        sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
 	}
 
 	function appendPrompt() {
@@ -334,11 +341,13 @@
         historyIndex = -1;
         // ENTER - Command Handling
         event.preventDefault(); // Prevent default new line behavior
-        const command = getCurrentCommand();
-        if (command) {
-            handleCommand(command);
-        } else {
-            appendNewCommandLine();
+        if(!commandInProgress){
+            const command = getCurrentCommand();
+            if (command) {
+                handleCommand(command);
+            } else {
+                appendNewCommandLine();
+            }
         }
     }
 
