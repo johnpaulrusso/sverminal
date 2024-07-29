@@ -1,8 +1,12 @@
 {
 	"name": "sverminal",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"description": "Terminal emulator built with Svelte and Tailwind.",
 	"license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/johnpaulrusso/sverminal.git"
+    },
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",
