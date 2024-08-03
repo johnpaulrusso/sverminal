@@ -59,6 +59,10 @@
 						svinfo(value.message);
 					}
 					break;
+                case SverminalResponseType.FREEFORM:
+                    {
+                        print(value.message, value.styles ?? []);
+                    }
 			}
 		}
 	});
@@ -125,6 +129,15 @@
 		line.setAttribute('contenteditable', 'false');
 		line.classList.add(...config.style.info);
 		sverminalDiv.appendChild(line);
+        sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
+	}
+
+    function print(text: string, styles: string[]) {
+		let textElement = document.createElement('span');
+		textElement.innerHTML = `${text}`;
+		textElement.setAttribute('contenteditable', 'false');
+		textElement.classList.add(...styles);
+        sverminalDiv.appendChild(textElement);
         sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
 	}
 
