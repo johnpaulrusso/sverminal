@@ -42,9 +42,25 @@
 		}
 	}
 
+    function printStylesExample(){
+        const text = 'Style';
+        sverminalWriter.write('|-----------------------------|');
+        sverminalWriter.write('\n');
+        sverminalWriter.write('|     ');
+        sverminalWriter.write(` Red  `, ['text-red-500']);
+        sverminalWriter.write(' ')
+        sverminalWriter.write(`Green `, ['text-green-500']);
+        sverminalWriter.write(' ')
+        sverminalWriter.write(` Blue`, ['text-blue-500']);
+        sverminalWriter.write('     |');
+        sverminalWriter.write('\n');
+        sverminalWriter.write('|-----------------------------|');
+    }
+
 	const delay = (delayInms: number) => {
 		return new Promise((resolve) => setTimeout(resolve, delayInms));
 	};
+    
 
 	async function countdown(args: string[]) {
 		if (args.length != 1) {
@@ -103,6 +119,8 @@
 			info(args);
 		} else if (method === 'countdown') {
 			await countdown(args);
+        } else if (method === 'freeform-demo') {
+            printStylesExample();
 		} else {
 			sverminalWriter.error(`${method} is not recognized as a valid command.`);
 		}
@@ -113,7 +131,7 @@
 	<h1 class="text-5xl md:text-7xl font-mono font-bold">SVERMINAL</h1>
 	<h3 class="text-sm md:text-base font-mono">Terminal emulator built on Svelte and Tailwind</h3>
 
-    <div class="w-full p-4">
+    <div class="w-full px-4 pt-4">
         <Sverminal 
             processor={processCommand} 
             writer={sverminalWriter} 
@@ -122,17 +140,49 @@
         />
     </div>
     
-    <div class="w-full p-4 text-left">
-        <h3 class="text-xl ">Demo Commands</h3>
-        <ul class="list-disc py-4 px-8">
-            <li>echo &lt;message&gt;</li>
-            <li>warn &lt;message&gt;</li>
-            <li>error &lt;message&gt;</li>
-            <li>info &lt;message&gt;</li>
-            <li>countdown &lt;number&gt; where number is a positive integer between 0 and 100</li>
-        </ul>
-        <a class="w-full text-left text-xl font-medium text-blue-600 dark:text-blue-500 hover:underline" 
-        href="https://github.com/johnpaulrusso/sverminal?tab=readme-ov-file#readme">Documentation</a>
+    <div class="w-full px-4 text-left">
+        <h3 class="text-xl py-4">Demo Commands - <a class="w-full text-left text-xl font-medium text-blue-600 dark:text-blue-500 hover:underline" 
+            href="https://github.com/johnpaulrusso/sverminal?tab=readme-ov-file#readme">Documentation</a></h3>
+            <div class="overflow-hidden rounded-md border border-gray-300">
+        <table class="min-w-full bg-white text-sm md:text-base">
+            
+            <tr class="w-full bg-gray-100">
+                <th class="py-2 px-4 border-b border-gray-300 text-left text-gray-600 font-semibold">Command</th>
+                <th class="py-2 px-4 border-b border-gray-300 text-left text-gray-600 font-semibold">Arguments</th>
+                <th class="py-2 px-4 border-b border-gray-300 text-left text-gray-600 font-semibold">Description</th>
+            </tr>
+            <tr>
+                <td class="py-2 px-4 border-b border-gray-300">echo</td>
+                <td class="py-2 px-4 border-b border-gray-300">message &lt;string&gt;</td>
+                <td class="py-2 px-4 border-b border-gray-300">Prints the message back to the terminal.</td>
+            </tr>
+            <tr>
+                <td class="py-2 px-4 border-b border-gray-300">warn</td>
+                <td class="py-2 px-4 border-b border-gray-300">message &lt;string&gt;</td>
+                <td class="py-2 px-4 border-b border-gray-300">Prints a warning message back to the terminal.</td>
+            </tr>
+            <tr>
+                <td class="py-2 px-4 border-b border-gray-300">error</td>
+                <td class="py-2 px-4 border-b border-gray-300">message &lt;string&gt;</td>
+                <td class="py-2 px-4 border-b border-gray-300">Prints an error message back to the terminal.</td>
+            </tr>
+            <tr>
+                <td class="py-2 px-4 border-b border-gray-300">info</td>
+                <td class="py-2 px-4 border-b border-gray-300">message &lt;string&gt;</td>
+                <td class="py-2 px-4 border-b border-gray-300">Prints an info message back to the terminal.</td>
+            </tr>
+            <tr>
+                <td class="py-2 px-4 border-b border-gray-300">freeform-demo</td>
+                <td class="py-2 px-4 border-b border-gray-300">None</td>
+                <td class="py-2 px-4 border-b border-gray-300">Prints out block of test that demostrates the ability to mix styles.</td>
+            </tr>
+            <tr>
+                <td class="py-2 px-4 border-b border-gray-300">countdown</td>
+                <td class="py-2 px-4 border-b border-gray-300">1-99 &lt;number&gt;</td>
+                <td class="py-2 px-4 border-b border-gray-300">Counts down from the provided number every seconds and prints the value to the terminal.</td>
+            </tr>
+        </table>
+    </div>
     </div>
 </div>
 
