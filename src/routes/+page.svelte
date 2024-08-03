@@ -174,7 +174,7 @@
             <tr>
                 <td class="py-2 px-4 border-b border-gray-300">freeform-demo</td>
                 <td class="py-2 px-4 border-b border-gray-300">None</td>
-                <td class="py-2 px-4 border-b border-gray-300">Prints out block of test that demostrates the ability to mix styles.</td>
+                <td class="py-2 px-4 border-b border-gray-300">Prints out block of text that demostrates the ability to mix styles.</td>
             </tr>
             <tr>
                 <td class="py-2 px-4 border-b border-gray-300">countdown</td>
