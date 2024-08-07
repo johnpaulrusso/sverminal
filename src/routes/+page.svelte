@@ -3,7 +3,9 @@
 	import Sverminal from '$lib/Sverminal.svelte';
 	import { SverminalWriter } from '$lib/writer/writer.js';
     import customConfig from '$lib/sverminal.config.js';
+	import { SverminalReader } from '$lib/reader/reader.js';
 
+    let sverminalReader = new SverminalReader();
 	let sverminalWriter = new SverminalWriter();
 
 	function echo(args: string[]) {
@@ -93,6 +95,23 @@
 		}
 	}
 
+    async function runInputDemo() {
+        let name = "";
+        let quest = "";
+        let color = "";
+        sverminalWriter.echo('Please answer the following questions:');
+        await sverminalReader.read("What is your name?").then((value: string) => {
+            name = value;
+        });
+        await sverminalReader.read("What is your quest?").then((value: string) => {
+            quest = value;
+        });
+        await sverminalReader.read("What is your favorite color?").then((value: string) => {
+            color = value;
+        });
+        sverminalWriter.echo(`Your answers: ${name}, ${quest}, ${color}`);
+    }
+
 	async function processCommand(command: string): Promise<void> {
 		// Your command processing logic here
 		console.log('Processing command from parent component:', command);
@@ -121,6 +140,8 @@
 			await countdown(args);
         } else if (method === 'freeform-demo') {
             printStylesExample();
+        } else if (method === 'input-demo') {
+            await runInputDemo();
 		} else {
 			sverminalWriter.error(`${method} is not recognized as a valid command.`);
 		}
@@ -133,7 +154,8 @@
 
     <div class="w-full px-4 pt-4">
         <Sverminal 
-            processor={processCommand} 
+            processor={processCommand}
+            reader={sverminalReader} 
             writer={sverminalWriter} 
             promptPrefix="sverminal" 
             config={customConfig} 
