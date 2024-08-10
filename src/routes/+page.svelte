@@ -194,14 +194,19 @@
                 <td class="py-2 px-4 border-b border-gray-300">Prints an info message back to the terminal.</td>
             </tr>
             <tr>
+                <td class="py-2 px-4 border-b border-gray-300">countdown</td>
+                <td class="py-2 px-4 border-b border-gray-300">1-99 &lt;number&gt;</td>
+                <td class="py-2 px-4 border-b border-gray-300">Counts down from the provided number every seconds and prints the value to the terminal.</td>
+            </tr>
+            <tr>
                 <td class="py-2 px-4 border-b border-gray-300">freeform-demo</td>
                 <td class="py-2 px-4 border-b border-gray-300">None</td>
                 <td class="py-2 px-4 border-b border-gray-300">Prints out block of text that demostrates the ability to mix styles.</td>
             </tr>
             <tr>
-                <td class="py-2 px-4 border-b border-gray-300">countdown</td>
-                <td class="py-2 px-4 border-b border-gray-300">1-99 &lt;number&gt;</td>
-                <td class="py-2 px-4 border-b border-gray-300">Counts down from the provided number every seconds and prints the value to the terminal.</td>
+                <td class="py-2 px-4 border-b border-gray-300">input-demo</td>
+                <td class="py-2 px-4 border-b border-gray-300">None</td>
+                <td class="py-2 px-4 border-b border-gray-300">Demonstrates the ability to request additional user input while processing a command.</td>
             </tr>
         </table>
     </div>
