@@ -45,13 +45,32 @@ export default {
 </script>
 ```
 
-```svelte
+```html
 <Sverminal 
     processor={processCommand} 
     writer={sverminalWriter} 
     promptPrefix="sverminal" 
     config={customConfig} 
 />
+```
+
+#### Requestion Additional User Input
+Sverminal also provides a mechanism for requestion additional user input while processing a command. 
+
+```javascript
+import { SverminalReader } from '$lib/reader/reader.js';
+let sverminalReader = new SverminalReader();
+
+async function processCommand(command: string): Promise<void> {
+    ...
+
+    let name = "";
+    await sverminalReader.read("What is your name?").then((value: string) => {
+        name = value;
+    });
+
+    ...
+}
 ```
 
 ### Configuration

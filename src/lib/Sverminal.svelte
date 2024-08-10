@@ -17,11 +17,13 @@
 		type SverminalWriter
 	} from './writer/writer.js';
 	import { SverminalUserSpan, SverminalPromptSpan, SpanPosition } from './core/span.js';
+	import type { SverminalReader } from './reader/reader.js';
 
 	export let processor: (command: string) => Promise<void>;
 	export let promptPrefix = 'sverminal';
 	export let config: Config = defaultConfig;
 	export let writer: SverminalWriter;
+    export let reader: SverminalReader;
 
 	$: promptText = `${promptPrefix}${config.promptSuffix}`;
 
@@ -33,8 +35,10 @@
 	let historyIndex = -1;
     let userSpans: SverminalUserSpan[] = [];
     let commandInProgress = false;
-
 	let commandHistory = createCommandHistory();
+    let workingReaderSpan: SverminalUserSpan;
+
+    let waitingForInput = false;
 
 	writer.subscribe((value: SverminalResponse) => {
 		if (value != undefined) {
@@ -277,6 +281,12 @@
 
     
 	function insertText(text: string) {
+
+        if(reader != null && workingReaderSpan != null){
+            workingReaderSpan.append(text);
+            workingReaderSpan.placeCursorAtEnd();
+        }
+
 		const selection = window.getSelection();
 		const range = selection?.getRangeAt(0); 
 		if (!range) { 
@@ -351,9 +361,11 @@
 	}
 
     function onKeyDownEnter(event: KeyboardEvent){
+        
         historyIndex = -1;
         // ENTER - Command Handling
         event.preventDefault(); // Prevent default new line behavior
+
         if(!commandInProgress){
             const command = getCurrentCommand();
             if (command) {
@@ -361,7 +373,11 @@
             } else {
                 appendNewCommandLine();
             }
+        } else if(reader.isReading){
+            workingReaderSpan.element().setAttribute('contentent-editable', 'false');
+            reader.response = getCurrentReaderInput();
         }
+
     }
 
     /**
@@ -369,7 +385,10 @@
      */
     function onKeyDownSpace(event: KeyboardEvent){
         historyIndex = -1;
-        if(performSpace()){
+        
+        if(reader.isReading){
+            return;
+        }else if(performSpace()){
             event.preventDefault();
         }
     }
@@ -447,6 +466,7 @@
 	/// Event Handling! ///
 	function onKeyDown(event: KeyboardEvent) {
 		if (event.code === 'Enter') {
+            console.log('ENTER!')
             onKeyDownEnter(event);
 		} else if (event.code === 'Space') {
 			// SPACE - Create new arguments. This may involve splitting existing commands/args.
@@ -466,7 +486,7 @@
 			//TODO - navigate history.
 
 			//replace the current command line with next item in history!
-			if (config.history.enabled) {
+			if (!reader.isReading && config.history.enabled) {
 				navigateHistory(event.code === 'ArrowDown');
 			}
 		} else if (event.code === 'Tab') {
@@ -505,8 +525,35 @@
 		return lastChild?.innerText.replace(promptText, '').replace(ZERO_WIDTH_SPACE_REGEX,'').trim() || '';
 	}
 
+    function getCurrentReaderInput(): string {
+		const readerSpan = workingReaderSpan.element() as HTMLElement;
+		return readerSpan.innerText.replace(promptText, '').replace(ZERO_WIDTH_SPACE_REGEX,'').trim() || '';
+	}
+
 	onMount(() => {
 		appendNewCommandLine();
+        reader.subscribe((value: string) => {
+            if(value != undefined && value != ""){
+                workingCommandLineDiv = document.createElement('div');
+                workingCommandLineDiv.setAttribute('contenteditable', 'true');
+                workingCommandLineDiv.classList.add('focus:outline-none');
+                workingCommandLineDiv.onclick = (event) => {
+                    event.stopPropagation();
+                };
+                sverminalDiv.appendChild(workingCommandLineDiv);
+
+                waitingForInput = true;
+                let promptLine = document.createElement('span');
+                promptLine.setAttribute('contenteditable', 'false');
+                promptLine.innerHTML = `${value}`;
+                workingCommandLineDiv.appendChild(promptLine);
+
+                workingReaderSpan = new SverminalUserSpan([]);
+                workingCommandLineDiv.appendChild(workingReaderSpan.element());
+                workingReaderSpan.placeCursorAtEnd();
+                sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
+            }
+        });
 	});
 </script>
 
@@ -515,7 +562,7 @@
 		bind:this={sverminalDiv}
 		contenteditable="true"
 		spellcheck="false"
-		class="sverminal-main w-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 h-80 overflow-auto"
+		class="sverminal-main w-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 h-80 overflow-auto text-sm md:text-base"
 		role="textbox"
 		aria-multiline="true"
 		tabindex="0"
