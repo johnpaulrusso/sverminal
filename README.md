@@ -1,5 +1,5 @@
 # README
-Sverminal is a Svelte component that provides an terminal emulator to be used in the browser. This component relies on Tailwind CSS for its styling.
+Sverminal is a Svelte component that provides a terminal emulator to be used in the browser. This component relies on Tailwind CSS for its styling.
 
 Try out the [Live Demo!](https://sverminal.io)
 
@@ -54,8 +54,8 @@ export default {
 />
 ```
 
-#### Requestion Additional User Input
-Sverminal also provides a mechanism for requestion additional user input while processing a command. 
+#### Requesting Additional User Input
+Sverminal also provides a mechanism for requesting additional user input while processing a command. 
 
 ```javascript
 import { SverminalReader } from '$lib/reader/reader.js';
