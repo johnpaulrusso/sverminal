@@ -8,7 +8,7 @@ beforeEach(() => {
     cy.sverminalType('{enter}');
 })
 
-describe.only('sverminal history - USER ACTIONS UP AND DOWN ARROWS', () => {
+describe('sverminal history - USER ACTIONS UP AND DOWN ARROWS', () => {
 
     it('history up once', () => {
         cy.sverminalType('{upArrow}');

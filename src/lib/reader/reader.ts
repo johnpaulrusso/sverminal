@@ -3,7 +3,7 @@ import { writable } from "svelte/store";
 export class SverminalReader {
 
     readonly prompt = writable<string>();
-    response: string = "";
+    response: string | undefined = undefined;
     isReading = false;
 
     subscribe(callback: (value: string) => void) {
@@ -12,11 +12,11 @@ export class SverminalReader {
 
     async read(prompt: string): Promise<string>{
         this.isReading = true;
-        this.response = "";
+        this.response = undefined;
         this.prompt.set(prompt);
         return new Promise<string>(resolve => {
             const interval = setInterval(() => {
-              if (this.response != "" && this.response != undefined) {
+              if (this.response != undefined) {
                 this.isReading = false;
                 this.prompt.set("");
                 clearInterval(interval);
