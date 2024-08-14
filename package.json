@@ -1,7 +1,7 @@
 {
 	"name": "sverminal",
-	"version": "0.4.3",
-	"description": "Terminal emulator built with Svelte and Tailwind.",
+	"version": "0.4.4",
+	"description": "Terminal emulator component built with Svelte and Tailwind.",
 	"license": "MIT",
     "repository": {
         "type": "git",
@@ -17,7 +17,9 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test": "vitest",
 		"lint": "prettier --check . && eslint .",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+        "cypress:open": "cypress open",
+        "cypress:run": "cypress run"
 	},
 	"exports": {
 		".": {

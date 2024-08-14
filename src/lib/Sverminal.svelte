@@ -38,8 +38,6 @@
 	let commandHistory = createCommandHistory();
     let workingReaderSpan: SverminalUserSpan;
 
-    let waitingForInput = false;
-
 	writer.subscribe((value: SverminalResponse) => {
 		if (value != undefined) {
 			switch (value.type) {
@@ -282,9 +280,10 @@
     
 	function insertText(text: string) {
 
-        if(reader != null && workingReaderSpan != null){
+        if(reader != null && reader.isReading && workingReaderSpan != null){
             workingReaderSpan.append(text);
             workingReaderSpan.placeCursorAtEnd();
+            return;
         }
 
 		const selection = window.getSelection();
@@ -542,7 +541,6 @@
                 };
                 sverminalDiv.appendChild(workingCommandLineDiv);
 
-                waitingForInput = true;
                 let promptLine = document.createElement('span');
                 promptLine.setAttribute('contenteditable', 'false');
                 promptLine.innerHTML = `${value}`;
