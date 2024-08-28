@@ -6,6 +6,8 @@ beforeEach(() => {
     cy.sverminalType('{enter}');
     cy.sverminalType('test');
     cy.sverminalType('{enter}');
+    cy.sverminalType('test');
+    cy.sverminalType('{enter}');
 })
 
 describe('sverminal history - USER ACTIONS UP AND DOWN ARROWS', () => {

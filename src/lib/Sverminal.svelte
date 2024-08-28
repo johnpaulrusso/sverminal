@@ -82,8 +82,11 @@
 			}
 			appendNewCommandLine();
 
-			//Regardless of the result, save the command in history.
-			commandHistory.push(command);
+			//Regardless of the result, save the command in history if it is a new command.
+            const lastCommand = commandHistory.get(0);
+            if(command != lastCommand){
+                commandHistory.push(command);
+            }
             commandInProgress = false;
 		}
 	}
