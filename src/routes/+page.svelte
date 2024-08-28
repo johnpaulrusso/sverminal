@@ -169,9 +169,19 @@
         <table class="min-w-full bg-white text-sm md:text-base">
             
             <tr class="w-full bg-gray-100">
-                <th class="py-2 px-4 border-b border-gray-300 text-left text-gray-600 font-semibold">Command</th>
+                <th class="py-2 px-4 border-b border-gray-300 text-left text-gray-600 font-semibold">Command/Input</th>
                 <th class="py-2 px-4 border-b border-gray-300 text-left text-gray-600 font-semibold">Arguments</th>
                 <th class="py-2 px-4 border-b border-gray-300 text-left text-gray-600 font-semibold">Description</th>
+            </tr>
+            <tr>
+                <td class="py-2 px-4 border-b border-gray-300">Enter key</td>
+                <td class="py-2 px-4 border-b border-gray-300">N/A</td>
+                <td class="py-2 px-4 border-b border-gray-300">Submit current command or input.</td>
+            </tr>
+            <tr>
+                <td class="py-2 px-4 border-b border-gray-300">Up/Down arrows keys</td>
+                <td class="py-2 px-4 border-b border-gray-300">N/A</td>
+                <td class="py-2 px-4 border-b border-gray-300">Navigate command history.</td>
             </tr>
             <tr>
                 <td class="py-2 px-4 border-b border-gray-300">echo</td>
