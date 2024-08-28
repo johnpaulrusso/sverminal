@@ -71,7 +71,6 @@
 
 	async function handleCommand(command: string) {
 		try {
-			lockCommand();
             commandInProgress = true;
 			await processor(command);
 		} catch (error) {
@@ -306,6 +305,7 @@
 	}
 
 	function lockCommand() {
+        workingCommandLineDiv.setAttribute('contenteditable', 'false');
 		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
 			if (index >= CommandIndex.COMMAND) {
 				childspan.setAttribute('contenteditable', 'false');
@@ -367,13 +367,14 @@
 
         if(!commandInProgress){
             const command = getCurrentCommand();
+            lockCommand();
             if (command) {
                 handleCommand(command);
             } else {
                 appendNewCommandLine();
             }
         } else if(reader.isReading){
-            workingReaderSpan.element().setAttribute('contentent-editable', 'false');
+            workingReaderSpan.lock();
             reader.response = getCurrentReaderInput();
         }
 
