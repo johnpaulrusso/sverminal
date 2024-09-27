@@ -18,12 +18,14 @@
 	} from './writer/writer.js';
 	import { SverminalUserSpan, SverminalPromptSpan, SpanPosition } from './core/span.js';
 	import type { SverminalReader } from './reader/reader.js';
+	import ProgramView from './ProgramView.svelte';
 
 	export let processor: (command: string) => Promise<void>;
 	export let promptPrefix = 'sverminal';
 	export let config: Config = defaultConfig;
 	export let writer: SverminalWriter;
     export let reader: SverminalReader;
+    export let programMode: boolean = false;
 
 	$: promptText = `${promptPrefix}${config.promptSuffix}`;
 
@@ -37,6 +39,7 @@
     let commandInProgress = false;
 	let commandHistory = createCommandHistory();
     let workingReaderSpan: SverminalUserSpan;
+
 
 	writer.subscribe((value: SverminalResponse) => {
 		if (value != undefined) {
@@ -559,20 +562,40 @@
 	});
 </script>
 
-<div class="flex flex-col justify-center items-center text-left">
-	<div
-		bind:this={sverminalDiv}
-		contenteditable="true"
-		spellcheck="false"
-		class="sverminal-main w-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 h-80 overflow-auto text-sm md:text-base"
-		role="textbox"
-		aria-multiline="true"
-		tabindex="0"
-		on:keydown={onKeyDown}
-		on:click={onClick}
-		on:paste={onPaste}
-	></div>
-</div>
+{#if programMode}
+<ProgramView>
+    <div slot="top" class="text-left p-2 font-mono">
+        PROGRAM MODE
+    </div>
+    <div
+        bind:this={sverminalDiv}
+        slot="bottom"
+        contenteditable="true"
+        spellcheck="false"
+        class="sverminal-main w-full h-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 overflow-auto text-sm md:text-base text-left"
+        role="textbox"
+        aria-multiline="true"
+        tabindex="0"
+        on:keydown={onKeyDown}
+        on:click={onClick}
+        on:paste={onPaste}
+    ></div>
+</ProgramView>
+{:else}
+    <div
+        bind:this={sverminalDiv}
+        contenteditable="true"
+        spellcheck="false"
+        class="sverminal-main w-full h-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 overflow-auto text-sm md:text-base text-left"
+        role="textbox"
+        aria-multiline="true"
+        tabindex="0"
+        on:keydown={onKeyDown}
+        on:click={onClick}
+        on:paste={onPaste}
+    ></div>
+{/if}
+
 
 <style>
 	[contenteditable] {

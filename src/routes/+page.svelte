@@ -7,7 +7,8 @@
 
     let sverminalReader = new SverminalReader();
 	let sverminalWriter = new SverminalWriter();
-
+    let programMode: boolean = false;
+    
 	function echo(args: string[]) {
 		if (args.length == 0) {
 			sverminalWriter.error('echo requires at least one argument. Usage: echo message');
@@ -142,6 +143,10 @@
             printStylesExample();
         } else if (method === 'input-demo') {
             await runInputDemo();
+        } else if (method === 'program') {
+            programMode = true;
+        } else if (method === 'exit' && programMode) {
+            programMode = false;
 		} else {
 			sverminalWriter.error(`${method} is not recognized as a valid command.`);
 		}
@@ -152,13 +157,14 @@
 	<h1 class="text-5xl md:text-7xl font-mono font-bold">SVERMINAL</h1>
 	<h3 class="text-sm md:text-base font-mono">Terminal emulator built on Svelte and Tailwind</h3>
 
-    <div class="w-full px-4 pt-4">
+    <div class="w-full h-[500px] px-4 pt-4">
         <Sverminal 
             processor={processCommand}
             reader={sverminalReader} 
             writer={sverminalWriter} 
             promptPrefix="sverminal" 
             config={customConfig} 
+            programMode={programMode}
         />
     </div>
     
