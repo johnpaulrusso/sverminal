@@ -4,10 +4,15 @@
 	import { SverminalWriter } from '$lib/writer/writer.js';
     import customConfig from '$lib/sverminal.config.js';
 	import { SverminalReader } from '$lib/reader/reader.js';
+	import { DemoProgram } from '$lib/program/demo.js';
+
+    const DEFAULT_PROMPT_PREFIX: string = "sverminal";
 
     let sverminalReader = new SverminalReader();
 	let sverminalWriter = new SverminalWriter();
     let programMode: boolean = false;
+    let demoProgram: DemoProgram = new DemoProgram(sverminalWriter);
+    let promptPrefix: string = DEFAULT_PROMPT_PREFIX;
     
 	function echo(args: string[]) {
 		if (args.length == 0) {
@@ -117,6 +122,18 @@
 		// Your command processing logic here
 		console.log('Processing command from parent component:', command);
 
+        if(programMode){
+            
+            if(command === demoProgram.exitCommand){
+                programMode = false;
+                promptPrefix = DEFAULT_PROMPT_PREFIX;
+            }else{
+                await demoProgram.processCommand(command);
+            }
+
+            return;
+        }
+
 		//First we should break the command up into pieces.
 		const commandParts: string[] = command.split(' ');
 
@@ -145,6 +162,8 @@
             await runInputDemo();
         } else if (method === 'program') {
             programMode = true;
+            promptPrefix = demoProgram.promptPrefix;
+            sverminalWriter.info(demoProgram.welcomeMessage ?? "Running demo program!");
         } else if (method === 'exit' && programMode) {
             programMode = false;
 		} else {
@@ -162,9 +181,8 @@
             processor={processCommand}
             reader={sverminalReader} 
             writer={sverminalWriter} 
-            promptPrefix="sverminal" 
+            promptPrefix={promptPrefix}
             config={customConfig} 
-            programMode={programMode}
         />
     </div>
     

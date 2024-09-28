@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 
+    export let hasGUI: boolean = false;
 	let containerDiv: HTMLDivElement | null = null;
 	let topDiv: HTMLDivElement | null = null;
 	let bottomDiv: HTMLDivElement | null = null;
@@ -15,7 +16,7 @@
 	}
 
 	function onMouseMove(e: MouseEvent) {
-		if (!isResizing || !topDiv || !bottomDiv || !divider || !containerDiv) return;
+		if (!hasGUI || !isResizing || !topDiv || !bottomDiv || !divider || !containerDiv) return;
 
 		const containerRect = containerDiv.getBoundingClientRect();
 		const topDivHeight = e.clientY - containerRect.top;
@@ -39,7 +40,7 @@
     }
 
     function performResize(){
-        if (!divider || !topDiv || !bottomDiv || !containerDiv) return;
+        if (!hasGUI || !divider || !topDiv || !bottomDiv || !containerDiv) return;
 
         const containerRect = containerDiv.getBoundingClientRect();
         const topRect = topDiv.getBoundingClientRect();
@@ -85,6 +86,7 @@
 </script>
 
 <div bind:this={containerDiv} class="relative w-full h-full min-h-[{2*MIN_SECTION_HEIGHT_PX}px] text-slate-50">
+{#if hasGUI}
 	<div
 		bind:this={topDiv}
 		class="relative h-[50%] w-full min-h-[{MIN_SECTION_HEIGHT_PX}px] left-0 z-0 overflow-x-auto top-0 bg-slate-900 border-b-[1px] border-slate-700"
@@ -100,10 +102,10 @@
 		on:mousedown={onMouseDown}
 	>
 	</button>
-
+{/if}
 	<div
 		bind:this={bottomDiv}
-		class="relative h-[50%] w-full min-h-[{MIN_SECTION_HEIGHT_PX}px] left-0 z-0 overflow-x-auto bottom-0 bg-slate-900"
+		class="relative w-full {hasGUI ? 'h-[50%]' : 'h-full'} min-h-[{MIN_SECTION_HEIGHT_PX}px] left-0 z-0 overflow-x-auto bottom-0 bg-slate-900"
 	>
 		<slot name="bottom" />
 	</div>

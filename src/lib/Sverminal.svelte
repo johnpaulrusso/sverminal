@@ -25,7 +25,6 @@
 	export let config: Config = defaultConfig;
 	export let writer: SverminalWriter;
     export let reader: SverminalReader;
-    export let programMode: boolean = false;
 
 	$: promptText = `${promptPrefix}${config.promptSuffix}`;
 
@@ -562,8 +561,7 @@
 	});
 </script>
 
-{#if programMode}
-<ProgramView>
+<ProgramView hasGUI={false}>
     <div slot="top" class="text-left p-2 font-mono">
         PROGRAM MODE
     </div>
@@ -581,20 +579,6 @@
         on:paste={onPaste}
     ></div>
 </ProgramView>
-{:else}
-    <div
-        bind:this={sverminalDiv}
-        contenteditable="true"
-        spellcheck="false"
-        class="sverminal-main w-full h-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 overflow-auto text-sm md:text-base text-left"
-        role="textbox"
-        aria-multiline="true"
-        tabindex="0"
-        on:keydown={onKeyDown}
-        on:click={onClick}
-        on:paste={onPaste}
-    ></div>
-{/if}
 
 
 <style>
