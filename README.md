@@ -1,13 +1,17 @@
 # README
+
 Sverminal is a Svelte component that provides a terminal emulator to be used in the browser. This component relies on Tailwind CSS for its styling.
 
 Try out the [Live Demo!](https://sverminal.io)
 
 ### Prerequisites
+
 Svelte and Tailwind CSS installed in your project.
 
 ### Installation
+
 Step 1: Install the sverminal npm package.
+
 ```bash
 npm install sverminal
 ```
@@ -17,45 +21,46 @@ Step 2: Add the sverminal package source files to your Tailwind CSS configuratio
 ```javascript
 export default {
 	content: [
-            './src/**/*.{html,js,ts,svelte}', 
-            './node_modules/sverminal/dist/**/*.{html,js,ts,svelte}'
-    ]
-}
+		'./src/**/*.{html,js,ts,svelte}',
+		'./node_modules/sverminal/dist/**/*.{html,js,ts,svelte}'
+	]
+};
 ```
 
 ### Example Usage
 
 ```html
 <script lang="ts">
-    import Sverminal from 'sverminal';
-    import { SverminalWriter } from 'sverminal/writer';
+	import Sverminal from 'sverminal';
+	import { SverminalWriter } from 'sverminal/writer';
 
-    //Optionally import a custom configuration.
-    import customConfig from '$lib/sverminal.config.js';
+	//Optionally import a custom configuration.
+	import customConfig from '$lib/sverminal.config.js';
 
-    //Use the writer to output text to the terminal.
-    let writer = new SverminalWriter();
+	//Use the writer to output text to the terminal.
+	let writer = new SverminalWriter();
 
-    async function processor(command: string): Promise<void> {
-        // Your command processing logic here
+	async function processor(command: string): Promise<void> {
+		// Your command processing logic here
 
-        // Example: echo the command back to the terminal.
-        writer.echo(command);
-    }
+		// Example: echo the command back to the terminal.
+		writer.echo(command);
+	}
 </script>
 ```
 
 ```html
-<Sverminal 
-    processor={processCommand} 
-    writer={sverminalWriter} 
-    promptPrefix="sverminal" 
-    config={customConfig} 
+<Sverminal
+	processor="{processCommand}"
+	writer="{sverminalWriter}"
+	promptPrefix="sverminal"
+	config="{customConfig}"
 />
 ```
 
 #### Requesting Additional User Input
-Sverminal also provides a mechanism for requesting additional user input while processing a command. 
+
+Sverminal also provides a mechanism for requesting additional user input while processing a command.
 
 ```javascript
 import { SverminalReader } from '$lib/reader/reader.js';
@@ -79,7 +84,7 @@ async function processCommand(command: string): Promise<void> {
 const customConfig = {
 	promptSuffix: '>',
 	style: {
-        //Arrays of CSS classes to be applied to each type of text.
+		//Arrays of CSS classes to be applied to each type of text.
 		prompt: ['text-emerald-400', 'font-bold'],
 		command: ['text-violet-400'],
 		flags: ['text-slate-400'], //Any argument prefixed by a '-' is considered a flag.

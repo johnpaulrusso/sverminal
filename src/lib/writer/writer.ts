@@ -4,14 +4,14 @@ export enum SverminalResponseType {
 	ECHO = 0,
 	WARNING,
 	ERROR,
-	INFO, 
-    FREEFORM, //Style and newlines are left to the user to define.
+	INFO,
+	FREEFORM //Style and newlines are left to the user to define.
 }
 
 export interface SverminalResponse {
 	type: SverminalResponseType;
 	message: string;
-    styles?: string[];
+	styles?: string[];
 }
 
 export class SverminalWriter {
@@ -21,13 +21,13 @@ export class SverminalWriter {
 		this.store.subscribe(callback);
 	}
 
-    write(message: string, styles?: string[]){
-        this.store.set({
+	write(message: string, styles?: string[]) {
+		this.store.set({
 			type: SverminalResponseType.FREEFORM,
 			message,
-            styles
+			styles
 		});
-    }
+	}
 
 	echo(message: string) {
 		this.store.set({
