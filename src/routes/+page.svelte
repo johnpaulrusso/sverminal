@@ -1,12 +1,13 @@
 <script lang="ts">
 	import '../app.css';
 	import Sverminal from '$lib/Sverminal.svelte';
-	import { SverminalWriter } from '$lib/writer/writer.js';
+	import { SverminalResponseTarget, SverminalWriter } from '$lib/writer/writer.js';
     import customConfig from '$lib/sverminal.config.js';
 	import { SverminalReader } from '$lib/reader/reader.js';
 
     let sverminalReader = new SverminalReader();
 	let sverminalWriter = new SverminalWriter();
+    let showSplit: boolean = false;
 
 	function echo(args: string[]) {
 		if (args.length == 0) {
@@ -112,6 +113,65 @@
         sverminalWriter.echo(`Your answers: ${name}, ${quest}, ${color}`);
     }
 
+    async function runSplitDemo(args: string[]) {
+        const welcome: string = 
+`Welcome to the split demo! Use the divider to adjust the height of each split. 
+
+    Options:
+        -q - close the split view.
+        -w - write text to the split view.
+        -c - clear all text content in the split view.
+
+`;
+
+        
+        if (args.length < 1 && !showSplit) {
+            sverminalWriter.info(welcome, SverminalResponseTarget.SPLIT);
+            showSplit = true;
+            return;
+        }else if(args.length < 1 ){
+			sverminalWriter.error(
+				`split-demo takes at least one option:
+    -q - close the split view.
+    -w - write text to the split view.
+    -c - clear all text content in the split view.`
+			);
+			return;
+		}
+
+        const supportedOptions = ['-q', '-w', '-c'];
+        if (args.length > 0 && supportedOptions.findIndex(o => o === args[0]) === -1) {
+			sverminalWriter.error(
+				'split-demo: unsupported option'
+			);
+            console.log(args[0]);
+			return;
+		}
+
+        const option = args[0];
+        if(option === '-q'){
+            if(showSplit){
+                sverminalWriter.clear(SverminalResponseTarget.SPLIT);
+            }
+            showSplit = false;
+        }else if(option === '-w'){
+            if(args.length < 2){
+                sverminalWriter.error(
+				'split-demo: the -w options requires a message be provided as the second argument. Ex: split-demo -w \'hello world\''
+			    );
+            }
+            console.log(args[1]);
+            sverminalWriter.echo(args[1], SverminalResponseTarget.SPLIT);
+        }else if(option === '-c'){
+            sverminalWriter.clear(SverminalResponseTarget.SPLIT);
+        }else{
+            sverminalWriter.error(
+				'split-demo: unsupported option'
+			);
+        }
+        
+    }
+
 	async function processCommand(command: string): Promise<void> {
 		// Your command processing logic here
 		console.log('Processing command from parent component:', command);
@@ -142,6 +202,8 @@
             printStylesExample();
         } else if (method === 'input-demo') {
             await runInputDemo();
+        } else if (method === 'split-demo') {
+            await runSplitDemo(args);
 		} else {
 			sverminalWriter.error(`${method} is not recognized as a valid command.`);
 		}
@@ -152,13 +214,14 @@
 	<h1 class="text-5xl md:text-7xl font-mono font-bold">SVERMINAL</h1>
 	<h3 class="text-sm md:text-base font-mono">Terminal emulator built on Svelte and Tailwind</h3>
 
-    <div class="w-full px-4 pt-4">
+    <div class="w-full h-[500px] px-4 pt-4">
         <Sverminal 
             processor={processCommand}
             reader={sverminalReader} 
             writer={sverminalWriter} 
             promptPrefix="sverminal" 
             config={customConfig} 
+            enableUI={showSplit}
         />
     </div>
     
@@ -217,6 +280,11 @@
                 <td class="py-2 px-4 border-b border-gray-300">input-demo</td>
                 <td class="py-2 px-4 border-b border-gray-300">None</td>
                 <td class="py-2 px-4 border-b border-gray-300">Demonstrates the ability to request additional user input while processing a command.</td>
+            </tr>
+            <tr>
+                <td class="py-2 px-4 border-b border-gray-300">split-demo</td>
+                <td class="py-2 px-4 border-b border-gray-300">Run command for argument list.</td>
+                <td class="py-2 px-4 border-b border-gray-300">Demonstrates the ability to split the terminal vertically. The vertical view can be used to display additional information to the user.</td>
             </tr>
         </table>
     </div>

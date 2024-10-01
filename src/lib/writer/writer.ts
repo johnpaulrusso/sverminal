@@ -6,12 +6,19 @@ export enum SverminalResponseType {
 	ERROR,
 	INFO, 
     FREEFORM, //Style and newlines are left to the user to define.
+    CLEAR, //Clear all responses!
+}
+
+export enum SverminalResponseTarget {
+    TERMINAL = 0,
+    SPLIT = 1
 }
 
 export interface SverminalResponse {
 	type: SverminalResponseType;
 	message: string;
     styles?: string[];
+    target?: SverminalResponseTarget
 }
 
 export class SverminalWriter {
@@ -21,39 +28,52 @@ export class SverminalWriter {
 		this.store.subscribe(callback);
 	}
 
-    write(message: string, styles?: string[]){
+    write(message: string, styles?: string[], target?: SverminalResponseTarget){
         this.store.set({
 			type: SverminalResponseType.FREEFORM,
 			message,
-            styles
+            styles,
+            target
 		});
     }
 
-	echo(message: string) {
+	echo(message: string, target?: SverminalResponseTarget) {
 		this.store.set({
 			type: SverminalResponseType.ECHO,
-			message
+			message,
+            target
 		});
 	}
 
-	warn(message: string) {
+	warn(message: string, target?: SverminalResponseTarget) {
 		this.store.set({
 			type: SverminalResponseType.WARNING,
-			message
+			message,
+            target
 		});
 	}
 
-	error(message: string) {
+	error(message: string, target?: SverminalResponseTarget) {
 		this.store.set({
 			type: SverminalResponseType.ERROR,
-			message
+			message,
+            target
 		});
 	}
 
-	info(message: string) {
+	info(message: string, target?: SverminalResponseTarget) {
 		this.store.set({
 			type: SverminalResponseType.INFO,
-			message
+			message,
+            target
+		});
+	}
+
+    clear(target?: SverminalResponseTarget) {
+		this.store.set({
+			type: SverminalResponseType.CLEAR,
+            message: '',
+            target
 		});
 	}
 }
