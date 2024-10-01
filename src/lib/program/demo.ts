@@ -1,8 +1,12 @@
-import { Program } from './program.js';
+import { MainProgram, type ProgramParamters } from './program.js';
 
-export class DemoProgram extends Program {
+export class DemoProgram extends MainProgram {
 	constructor() {
-		super('sverminal');
+		const params: ProgramParamters = {
+			name: 'sverminal',
+			prompt: 'sverminal'
+		};
+		super(params);
 	}
 
 	async processCommand(command: string): Promise<void> {

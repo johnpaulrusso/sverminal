@@ -14,12 +14,12 @@
 	import { SverminalResponseType, type SverminalResponse } from './writer/writer.js';
 	import { SverminalUserSpan, SverminalPromptSpan, SpanPosition } from './core/span.js';
 	import ProgramView from './ProgramView.svelte';
-	import type { Program } from './program/program.js';
+	import type { MainProgram } from './program/program.js';
 
 	export let config: Config = defaultConfig;
-	export let program: Program;
+	export let program: MainProgram;
 
-	$: promptText = `${program.getPrefix()}${config.promptSuffix}`;
+	$: promptText = `${program.params.prompt}${config.promptSuffix}`;
 
 	const ZERO_WIDTH_SPACE_REGEX: RegExp = /\u200B/g;
 
