@@ -12,12 +12,14 @@
 	import { defaultConfig, type Config } from '$lib/config/defaultConfig.js';
 	import { createCommandHistory } from '$lib/history/factory.js';
 	import {
+	SverminalResponseTarget,
 		SverminalResponseType,
 		type SverminalResponse,
 		type SverminalWriter
 	} from './writer/writer.js';
 	import { SverminalUserSpan, SverminalPromptSpan, SpanPosition } from './core/span.js';
 	import type { SverminalReader } from './reader/reader.js';
+	import VerticalSplitLayout from './VerticalSplitLayout.svelte';
 
 	export let processor: (command: string) => Promise<void>;
 	export let promptPrefix = 'sverminal';
@@ -38,43 +40,16 @@
 	let commandHistory = createCommandHistory();
     let workingReaderSpan: SverminalUserSpan;
 
-	writer.subscribe((value: SverminalResponse) => {
-		if (value != undefined) {
-			switch (value.type) {
-				case SverminalResponseType.ECHO:
-					{
-						svecho(value.message);
-					}
-					break;
-				case SverminalResponseType.WARNING:
-					{
-						svwarn(value.message);
-					}
-					break;
-				case SverminalResponseType.ERROR:
-					{
-						sverror(value.message);
-					}
-					break;
-				case SverminalResponseType.INFO:
-					{
-						svinfo(value.message);
-					}
-					break;
-                case SverminalResponseType.FREEFORM:
-                    {
-                        print(value.message, value.styles ?? []);
-                    }
-			}
-		}
-	});
+    //TOP/SPLIT VIEW
+    export let enableUI: boolean = false;
+    let sverminalUiDiv: HTMLDivElement;
 
 	async function handleCommand(command: string) {
 		try {
             commandInProgress = true;
 			await processor(command);
 		} catch (error) {
-			sverror(`Failed to process command: ${command} - Error: ${error}`);
+			sverror(`Failed to process command: ${command} - Error: ${error}`, sverminalDiv);
 		} finally {
             
 			if (config.newlineBetweenCommands) {
@@ -100,49 +75,49 @@
         sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
 	}
 
-	function svecho(message: string) {
+	function svecho(message: string, target: HTMLDivElement) {
 		let line = document.createElement('div');
 		line.innerHTML = `${message}`;
 		line.setAttribute('contenteditable', 'false');
 		line.classList.add(...config.style.text);
-		sverminalDiv.appendChild(line);
-        sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
+		target.appendChild(line);
+        target.scrollTop = target.scrollHeight;
 	}
 
-	function svwarn(message: string) {
+	function svwarn(message: string, target: HTMLDivElement) {
 		let line = document.createElement('div');
 		line.innerHTML = `${message}`;
 		line.setAttribute('contenteditable', 'false');
 		line.classList.add(...config.style.warn);
-		sverminalDiv.appendChild(line);
-        sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
+		target.appendChild(line);
+        target.scrollTop = target.scrollHeight;
 	}
 
-	function sverror(message: string) {
+	function sverror(message: string, target: HTMLDivElement) {
 		let line = document.createElement('div');
 		line.innerHTML = `${message}`;
 		line.setAttribute('contenteditable', 'false');
 		line.classList.add(...config.style.error);
-		sverminalDiv.appendChild(line);
-        sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
+		target.appendChild(line);
+        target.scrollTop = target.scrollHeight;
 	}
 
-	function svinfo(message: string) {
+	function svinfo(message: string, target: HTMLDivElement) {
 		let line = document.createElement('div');
 		line.innerHTML = `${message}`;
 		line.setAttribute('contenteditable', 'false');
 		line.classList.add(...config.style.info);
-		sverminalDiv.appendChild(line);
-        sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
+		target.appendChild(line);
+        target.scrollTop = target.scrollHeight;
 	}
 
-    function print(text: string, styles: string[]) {
+    function print(text: string, styles: string[], target: HTMLDivElement) {
 		let textElement = document.createElement('span');
 		textElement.innerHTML = `${text}`;
 		textElement.setAttribute('contenteditable', 'false');
 		textElement.classList.add(...styles);
-        sverminalDiv.appendChild(textElement);
-        sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
+        target.appendChild(textElement);
+        target.scrollTop = target.scrollHeight;
 	}
 
 	function appendPrompt() {
@@ -535,6 +510,7 @@
 
 	onMount(() => {
 		appendNewCommandLine();
+
         reader.subscribe((value: string) => {
             if(value != undefined && value != ""){
                 workingCommandLineDiv = document.createElement('div');
@@ -556,15 +532,65 @@
                 sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
             }
         });
+
+        writer.subscribe((value: SverminalResponse) => {
+		    if (value != undefined) {
+                
+                const target = value.target ?? SverminalResponseTarget.TERMINAL;
+                const htmlTarget = target === SverminalResponseTarget.SPLIT ? sverminalUiDiv : sverminalDiv;
+
+			    switch (value.type) {
+				case SverminalResponseType.ECHO:
+					{
+						svecho(value.message, htmlTarget);
+					}
+					break;
+				case SverminalResponseType.WARNING:
+					{
+						svwarn(value.message, htmlTarget);
+					}
+					break;
+				case SverminalResponseType.ERROR:
+					{
+						sverror(value.message, htmlTarget);
+					}
+					break;
+				case SverminalResponseType.INFO:
+					{
+						svinfo(value.message, htmlTarget);
+					}
+					break;
+                case SverminalResponseType.FREEFORM:
+                    {
+                        print(value.message, value.styles ?? [], htmlTarget);
+                    }
+                case SverminalResponseType.CLEAR:
+                    {
+                        htmlTarget.textContent = '';
+                    }
+                    break;
+                }
+                
+            }
+        });
 	});
 </script>
 
-<div class="flex flex-col justify-center items-center text-left">
+<VerticalSplitLayout splitActive={enableUI}>
+	<div bind:this={sverminalUiDiv} 
+        slot="top" 
+        contenteditable="false"
+        spellcheck="false"
+        class="w-full h-full text-left p-2 font-mono text-sm md:text-base bg-slate-900 text-slate-100 resize-none overflow-auto"
+        aria-multiline="true"
+        role="textbox">
+    </div>
 	<div
 		bind:this={sverminalDiv}
+		slot="bottom"
 		contenteditable="true"
 		spellcheck="false"
-		class="sverminal-main w-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 h-80 overflow-auto text-sm md:text-base"
+		class="sverminal-main w-full h-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 overflow-auto text-sm md:text-base text-left"
 		role="textbox"
 		aria-multiline="true"
 		tabindex="0"
@@ -572,7 +598,7 @@
 		on:click={onClick}
 		on:paste={onPaste}
 	></div>
-</div>
+</VerticalSplitLayout>
 
 <style>
 	[contenteditable] {
