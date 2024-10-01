@@ -1,23 +1,23 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 
-    export let splitActive: boolean = false;
+	export let splitActive: boolean = false;
 
 	let containerDiv: HTMLDivElement | null = null;
 	let topDiv: HTMLDivElement | null = null;
 	let bottomDiv: HTMLDivElement | null = null;
 	let divider: HTMLButtonElement | null = null;
 	let isResizing: boolean = false;
-    let resizeObserver: ResizeObserver | null = null;
+	let resizeObserver: ResizeObserver | null = null;
 
-    const MIN_SECTION_HEIGHT_PX = 50;
+	const MIN_SECTION_HEIGHT_PX = 50;
 
-    $: if(!splitActive) { 
-        if (topDiv && bottomDiv){
-            topDiv.style.height = '';
-            bottomDiv.style.height = '';
-        }
-    } 
+	$: if (!splitActive) {
+		if (topDiv && bottomDiv) {
+			topDiv.style.height = '';
+			bottomDiv.style.height = '';
+		}
+	}
 
 	function onMouseDown(e: MouseEvent) {
 		isResizing = true;
@@ -43,44 +43,44 @@
 		isResizing = false;
 	}
 
-    function onResize(e: Event){
-        performResize();
-    }
+	function onResize(e: Event) {
+		performResize();
+	}
 
-    function performResize(){
-        if (!divider || !topDiv || !bottomDiv || !containerDiv) return;
+	function performResize() {
+		if (!divider || !topDiv || !bottomDiv || !containerDiv) return;
 
-        const containerRect = containerDiv.getBoundingClientRect();
-        const topRect = topDiv.getBoundingClientRect();
-        const bottomRect = bottomDiv.getBoundingClientRect();
+		const containerRect = containerDiv.getBoundingClientRect();
+		const topRect = topDiv.getBoundingClientRect();
+		const bottomRect = bottomDiv.getBoundingClientRect();
 
-        //Shrink the bottom first.
-        if(bottomRect.height <= MIN_SECTION_HEIGHT_PX){
-            topDiv.style.height = `${containerRect.height - MIN_SECTION_HEIGHT_PX}px`;
-            divider.style.bottom = `${MIN_SECTION_HEIGHT_PX}px`;
-            bottomDiv.style.height = `${MIN_SECTION_HEIGHT_PX}px`;
-        }else if(topRect.height <= MIN_SECTION_HEIGHT_PX){
-            return; //Can't get any smaller.
-        }else{
-            let updatedBottomHeight = containerRect.height - topRect.height;
-            divider.style.bottom = `${updatedBottomHeight}px`;
-            bottomDiv.style.height = `${updatedBottomHeight}px`;
-        }
-    }
+		//Shrink the bottom first.
+		if (bottomRect.height <= MIN_SECTION_HEIGHT_PX) {
+			topDiv.style.height = `${containerRect.height - MIN_SECTION_HEIGHT_PX}px`;
+			divider.style.bottom = `${MIN_SECTION_HEIGHT_PX}px`;
+			bottomDiv.style.height = `${MIN_SECTION_HEIGHT_PX}px`;
+		} else if (topRect.height <= MIN_SECTION_HEIGHT_PX) {
+			return; //Can't get any smaller.
+		} else {
+			let updatedBottomHeight = containerRect.height - topRect.height;
+			divider.style.bottom = `${updatedBottomHeight}px`;
+			bottomDiv.style.height = `${updatedBottomHeight}px`;
+		}
+	}
 
 	onMount(() => {
 		if (typeof window !== 'undefined') {
 			document.addEventListener('mousemove', onMouseMove);
 			document.addEventListener('mouseup', onMouseUp);
-            window.addEventListener("resize", onResize);
+			window.addEventListener('resize', onResize);
 
-            resizeObserver = new ResizeObserver(() => {
-                performResize();
-            })
+			resizeObserver = new ResizeObserver(() => {
+				performResize();
+			});
 
-            if(containerDiv){
-                resizeObserver.observe(containerDiv)
-            }
+			if (containerDiv) {
+				resizeObserver.observe(containerDiv);
+			}
 		}
 	});
 
@@ -88,7 +88,7 @@
 		if (typeof window !== 'undefined') {
 			document.removeEventListener('mousemove', onMouseMove);
 			document.removeEventListener('mouseup', onMouseUp);
-            window.removeEventListener("resize", onResize);
+			window.removeEventListener('resize', onResize);
 		}
 	});
 </script>
@@ -97,13 +97,17 @@
 	bind:this={containerDiv}
 	class="relative w-full h-full min-h-[{2 * MIN_SECTION_HEIGHT_PX}px] text-slate-50"
 >
-    <div
-        bind:this={topDiv}
-        class="relative {splitActive ? 'h-[50%]' : 'h-0'} w-full min-h-[{splitActive ? MIN_SECTION_HEIGHT_PX : 0}px] left-0 z-0 overflow-x-auto top-0 bg-slate-900 {splitActive ? 'border-b-[1px]' : ''} border-slate-700"
-    >
-        <slot name="top" />
-    </div>
-    {#if splitActive}
+	<div
+		bind:this={topDiv}
+		class="relative {splitActive ? 'h-[50%]' : 'h-0'} w-full min-h-[{splitActive
+			? MIN_SECTION_HEIGHT_PX
+			: 0}px] left-0 z-0 overflow-x-auto top-0 bg-slate-900 {splitActive
+			? 'border-b-[1px]'
+			: ''} border-slate-700"
+	>
+		<slot name="top" />
+	</div>
+	{#if splitActive}
 		<button
 			bind:this={divider}
 			class="absolute h-[5px] w-full left-0 bottom-[50%] z-10 cursor-row-resize op
@@ -118,7 +122,7 @@
 		class="relative w-full {splitActive
 			? 'h-[50%]'
 			: 'h-full'} min-h-[{MIN_SECTION_HEIGHT_PX}px] left-0 z-0 overflow-x-auto bottom-0 bg-slate-900"
-	    >
+	>
 		<slot name="bottom" />
 	</div>
 </div>
