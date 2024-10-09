@@ -34,7 +34,7 @@
 	 */
 	export let autoCompletes: string[] = [];
     const autoCompleter: AutoCompleter = new AutoCompleter();
-    let cachedInput = '';
+    let cachedInput: string | undefined = undefined;
 
 	$: promptText = `${promptPrefix}${config.promptSuffix}`;
     $: if(autoCompletes.length > 0){
@@ -451,17 +451,30 @@
             return;
         }
 
-        const input = span.text();
+        const currentInput = span.text();
 
-        const autoComplete = autoCompleter.getNextOption(input);
+        //If no input is cached (first time hitting TAB)
+        if(cachedInput === undefined){
+            cachedInput = currentInput;
+        }
+        const autoComplete = autoCompleter.getNextOption(cachedInput);
 
         if(autoComplete){
             span.replaceText(autoComplete);
         }
     }
 
+    function onKeyDownPreProcessing(event: KeyboardEvent){
+        if(event.code != 'Tab'){
+            cachedInput = undefined;
+        }
+    }
+
 	/// Event Handling! ///
 	function onKeyDown(event: KeyboardEvent) {
+
+        onKeyDownPreProcessing(event);
+
 		if (event.code === 'Enter') {
 			console.log('ENTER!');
 			onKeyDownEnter(event);
