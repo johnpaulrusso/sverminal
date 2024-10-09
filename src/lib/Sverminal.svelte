@@ -21,6 +21,7 @@
 	import type { SverminalReader } from './reader/reader.js';
 	import VerticalSplitLayout from './VerticalSplitLayout.svelte';
 	import type { CommandHistoryStrategy } from './history/commandhistorystrategy.js';
+	import { AutoCompleter } from './autocomplete/autocomplete.js';
 
 	export let processor: (command: string) => Promise<void>;
 	export let promptPrefix = 'sverminal';
@@ -32,9 +33,13 @@
 	 * Optionally pass in a list of strings that will 'auto-complete' when the user presses the TAB key.
 	 */
 	export let autoCompletes: string[] = [];
+    const autoCompleter: AutoCompleter = new AutoCompleter();
+    let cachedInput = '';
 
 	$: promptText = `${promptPrefix}${config.promptSuffix}`;
-
+    $: if(autoCompletes.length > 0){
+        autoCompleter.setOptions(autoCompletes);
+    }
 	const ZERO_WIDTH_SPACE_REGEX: RegExp = /\u200B/g;
 
 	let sverminalDiv: HTMLDivElement;
@@ -438,6 +443,23 @@
 		}
 	}
 
+    function onKeyDownTab(event: KeyboardEvent) {
+        event.preventDefault();
+        
+        const span = userSpans[workingChildIndex - 1];
+        if(!span){
+            return;
+        }
+
+        const input = span.text();
+
+        const autoComplete = autoCompleter.getNextOption(input);
+
+        if(autoComplete){
+            span.replaceText(autoComplete);
+        }
+    }
+
 	/// Event Handling! ///
 	function onKeyDown(event: KeyboardEvent) {
 		if (event.code === 'Enter') {
@@ -467,6 +489,7 @@
 		} else if (event.code === 'Tab') {
 			//TAB - Reserved for future feature to autocomplete text.
 			//TODO - autocomplete.
+            onKeyDownTab(event);
 		} else {
 			//ELSE - For now simply format args.
 			setTimeout(() => {
