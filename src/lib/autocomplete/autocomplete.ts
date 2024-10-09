@@ -17,6 +17,8 @@ export class AutoCompleter {
 
 	setOptions(options: string[]) {
 		this.options = options.sort((a, b) => a.localeCompare(b));
+        this.currentOptionIndex = 0;
+		this.lastKnownUserInput = '';
 	}
 
 	getNextOption(userInput: string): string {
