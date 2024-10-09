@@ -104,7 +104,9 @@ export default customConfig;
 ```
 
 ### Development
+
 Run the demo locally.
+
 ```
 npm run dev
 ```
