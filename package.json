@@ -1,6 +1,6 @@
 {
 	"name": "sverminal",
-	"version": "0.5.3",
+	"version": "0.6.0",
 	"description": "Terminal emulator component built with Svelte and Tailwind.",
 	"license": "MIT",
 	"repository": {
