@@ -11,7 +11,7 @@ export const defaultConfig = {
 	},
 	history: {
 		enabled: true,
-		method: 'memory', //memory (default), sessionstorage (tbd), localstorage (tbd)
+		method: 'memory', //memory (default), sessionStorage (tbd), localStorage (tbd)
 		limit: 10
 	},
 	newlineBetweenCommands: false
