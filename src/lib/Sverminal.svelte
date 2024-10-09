@@ -28,6 +28,11 @@
 	export let writer: SverminalWriter;
 	export let reader: SverminalReader;
 
+	/**
+	 * Optionally pass in a list of strings that will 'auto-complete' when the user presses the TAB key.
+	 */
+	export let autoCompletes: string[] = [];
+
 	$: promptText = `${promptPrefix}${config.promptSuffix}`;
 
 	const ZERO_WIDTH_SPACE_REGEX: RegExp = /\u200B/g;
@@ -38,7 +43,7 @@
 	let historyIndex = -1;
 	let userSpans: SverminalUserSpan[] = [];
 	let commandInProgress = false;
-	let commandHistory: CommandHistoryStrategy; 
+	let commandHistory: CommandHistoryStrategy;
 	let workingReaderSpan: SverminalUserSpan;
 
 	//TOP/SPLIT VIEW
@@ -329,7 +334,7 @@
 		appendCommand();
 		placeCursorAtWorkingIndex();
 		insertText(historicalCommand);
-        formatArgs();
+		formatArgs();
 	}
 
 	function onKeyDownEnter(event: KeyboardEvent) {
@@ -505,7 +510,7 @@
 	}
 
 	onMount(() => {
-        commandHistory = createCommandHistory();
+		commandHistory = createCommandHistory();
 
 		appendNewCommandLine();
 
