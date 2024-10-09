@@ -95,7 +95,7 @@ const customConfig = {
 	},
 	history: {
 		enabled: true,
-		method: 'memory', //memory (default), sessionstorage, localstorage
+		method: 'memory', //memory (default), sessionStorage, localStorage
 		limit: 10 //Max number of history entries.
 	},
 	newlineBetweenCommands: false //Set this to true if you want an extra line between commands.
