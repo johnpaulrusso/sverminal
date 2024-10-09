@@ -5,7 +5,7 @@
 	import customConfig from '$lib/sverminal.config.js';
 	import { SverminalReader } from '$lib/reader/reader.js';
 
-    const autoCompletes = [
+    const COMMANDS = [
         'echo',
         'warn',
         'error',
@@ -14,11 +14,12 @@
         'freeform-demo',
         'input-demo',
         'split-demo'
-    ]
+    ];
 
 	let sverminalReader = new SverminalReader();
 	let sverminalWriter = new SverminalWriter();
 	let showSplit: boolean = false;
+    let autoCompletes = COMMANDS;
 
 	function echo(args: string[]) {
 		if (args.length == 0) {
@@ -175,6 +176,17 @@
 		}
 	}
 
+    function getCurrentCommand(event: CustomEvent){
+        const command = event.detail;
+        const commandParts: string[] = command.split(' ');
+
+        if (commandParts.length > 0 && COMMANDS.findIndex(c => c === commandParts[0]) != -1){
+            autoCompletes = [];
+        }else{
+            autoCompletes = COMMANDS;
+        }
+    }
+
 	async function processCommand(command: string): Promise<void> {
 		// Your command processing logic here
 		console.log('Processing command from parent component:', command);
@@ -226,6 +238,7 @@
 			config={customConfig}
 			enableUI={showSplit}
             autoCompletes={autoCompletes}
+            on:get-current-command={getCurrentCommand}
 		/>
 	</div>
 

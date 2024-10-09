@@ -7,8 +7,7 @@
 </script>
 
 <script lang="ts">
-	import { onMount } from 'svelte';
-
+	import { onMount, createEventDispatcher } from 'svelte';
 	import { defaultConfig, type Config } from '$lib/config/defaultConfig.js';
 	import { createCommandHistory } from '$lib/history/factory.js';
 	import {
@@ -22,6 +21,8 @@
 	import VerticalSplitLayout from './VerticalSplitLayout.svelte';
 	import type { CommandHistoryStrategy } from './history/commandhistorystrategy.js';
 	import { AutoCompleter } from './autocomplete/autocomplete.js';
+
+    const dispatch = createEventDispatcher();
 
 	export let processor: (command: string) => Promise<void>;
 	export let promptPrefix = 'sverminal';
@@ -37,9 +38,8 @@
     let cachedInput: string | undefined = undefined;
 
 	$: promptText = `${promptPrefix}${config.promptSuffix}`;
-    $: if(autoCompletes.length > 0){
-        autoCompleter.setOptions(autoCompletes);
-    }
+    $: autoCompleter.setOptions(autoCompletes);
+
 	const ZERO_WIDTH_SPACE_REGEX: RegExp = /\u200B/g;
 
 	let sverminalDiv: HTMLDivElement;
@@ -470,6 +470,14 @@
         }
     }
 
+    function onKeyDownPostProcessing(event: KeyboardEvent){
+        if(event.code != 'Tab'){
+            const command = getCurrentCommand();
+            dispatch('get-current-command', command);
+        }
+    }
+
+
 	/// Event Handling! ///
 	function onKeyDown(event: KeyboardEvent) {
 
@@ -509,6 +517,8 @@
 				formatArgs();
 			}, 25);
 		}
+
+        onKeyDownPostProcessing(event);
 	}
 
 	function onPaste(event: ClipboardEvent) {
