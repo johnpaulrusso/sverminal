@@ -5,6 +5,17 @@
 	import customConfig from '$lib/sverminal.config.js';
 	import { SverminalReader } from '$lib/reader/reader.js';
 
+    const autoCompletes = [
+        'echo',
+        'warn',
+        'error',
+        'info',
+        'countdown',
+        'freeform-demo',
+        'input-demo',
+        'split-demo'
+    ]
+
 	let sverminalReader = new SverminalReader();
 	let sverminalWriter = new SverminalWriter();
 	let showSplit: boolean = false;
@@ -214,6 +225,7 @@
 			promptPrefix="sverminal"
 			config={customConfig}
 			enableUI={showSplit}
+            autoCompletes={autoCompletes}
 		/>
 	</div>
 

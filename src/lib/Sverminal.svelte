@@ -21,6 +21,7 @@
 	import type { SverminalReader } from './reader/reader.js';
 	import VerticalSplitLayout from './VerticalSplitLayout.svelte';
 	import type { CommandHistoryStrategy } from './history/commandhistorystrategy.js';
+	import { AutoCompleter } from './autocomplete/autocomplete.js';
 
 	export let processor: (command: string) => Promise<void>;
 	export let promptPrefix = 'sverminal';
@@ -28,8 +29,17 @@
 	export let writer: SverminalWriter;
 	export let reader: SverminalReader;
 
-	$: promptText = `${promptPrefix}${config.promptSuffix}`;
+	/**
+	 * Optionally pass in a list of strings that will 'auto-complete' when the user presses the TAB key.
+	 */
+	export let autoCompletes: string[] = [];
+    const autoCompleter: AutoCompleter = new AutoCompleter();
+    let cachedInput: string | undefined = undefined;
 
+	$: promptText = `${promptPrefix}${config.promptSuffix}`;
+    $: if(autoCompletes.length > 0){
+        autoCompleter.setOptions(autoCompletes);
+    }
 	const ZERO_WIDTH_SPACE_REGEX: RegExp = /\u200B/g;
 
 	let sverminalDiv: HTMLDivElement;
@@ -38,7 +48,7 @@
 	let historyIndex = -1;
 	let userSpans: SverminalUserSpan[] = [];
 	let commandInProgress = false;
-	let commandHistory: CommandHistoryStrategy; 
+	let commandHistory: CommandHistoryStrategy;
 	let workingReaderSpan: SverminalUserSpan;
 
 	//TOP/SPLIT VIEW
@@ -329,7 +339,7 @@
 		appendCommand();
 		placeCursorAtWorkingIndex();
 		insertText(historicalCommand);
-        formatArgs();
+		formatArgs();
 	}
 
 	function onKeyDownEnter(event: KeyboardEvent) {
@@ -433,8 +443,38 @@
 		}
 	}
 
+    function onKeyDownTab(event: KeyboardEvent) {
+        event.preventDefault();
+        
+        const span = userSpans[workingChildIndex - 1];
+        if(!span){
+            return;
+        }
+
+        const currentInput = span.text();
+
+        //If no input is cached (first time hitting TAB)
+        if(cachedInput === undefined){
+            cachedInput = currentInput;
+        }
+        const autoComplete = autoCompleter.getNextOption(cachedInput);
+
+        if(autoComplete){
+            span.replaceText(autoComplete);
+        }
+    }
+
+    function onKeyDownPreProcessing(event: KeyboardEvent){
+        if(event.code != 'Tab'){
+            cachedInput = undefined;
+        }
+    }
+
 	/// Event Handling! ///
 	function onKeyDown(event: KeyboardEvent) {
+
+        onKeyDownPreProcessing(event);
+
 		if (event.code === 'Enter') {
 			console.log('ENTER!');
 			onKeyDownEnter(event);
@@ -462,6 +502,7 @@
 		} else if (event.code === 'Tab') {
 			//TAB - Reserved for future feature to autocomplete text.
 			//TODO - autocomplete.
+            onKeyDownTab(event);
 		} else {
 			//ELSE - For now simply format args.
 			setTimeout(() => {
@@ -505,7 +546,7 @@
 	}
 
 	onMount(() => {
-        commandHistory = createCommandHistory();
+		commandHistory = createCommandHistory();
 
 		appendNewCommandLine();
 
