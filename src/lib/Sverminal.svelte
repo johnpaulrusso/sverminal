@@ -20,6 +20,7 @@
 	import { SverminalUserSpan, SverminalPromptSpan, SpanPosition } from './core/span.js';
 	import type { SverminalReader } from './reader/reader.js';
 	import VerticalSplitLayout from './VerticalSplitLayout.svelte';
+	import type { CommandHistoryStrategy } from './history/commandhistorystrategy.js';
 
 	export let processor: (command: string) => Promise<void>;
 	export let promptPrefix = 'sverminal';
@@ -37,7 +38,7 @@
 	let historyIndex = -1;
 	let userSpans: SverminalUserSpan[] = [];
 	let commandInProgress = false;
-	let commandHistory = createCommandHistory();
+	let commandHistory: CommandHistoryStrategy; 
 	let workingReaderSpan: SverminalUserSpan;
 
 	//TOP/SPLIT VIEW
@@ -328,6 +329,7 @@
 		appendCommand();
 		placeCursorAtWorkingIndex();
 		insertText(historicalCommand);
+        formatArgs();
 	}
 
 	function onKeyDownEnter(event: KeyboardEvent) {
@@ -503,6 +505,8 @@
 	}
 
 	onMount(() => {
+        commandHistory = createCommandHistory();
+
 		appendNewCommandLine();
 
 		reader.subscribe((value: string) => {
