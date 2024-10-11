@@ -7,7 +7,7 @@
 </script>
 
 <script lang="ts">
-	import { onMount, createEventDispatcher } from 'svelte';
+	import { onMount, createEventDispatcher, afterUpdate } from 'svelte';
 	import { defaultConfig, type Config } from '$lib/config/defaultConfig.js';
 	import { createCommandHistory } from '$lib/history/factory.js';
 	import {
@@ -472,8 +472,12 @@
 
     function onKeyDownPostProcessing(event: KeyboardEvent){
         if(event.code != 'Tab'){
-            const command = getAllCurrentInput();
-            dispatch('get-current-command', command);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                const command = getAllCurrentInput();
+                dispatch('get-current-command', command);
+              })
+            })
         }
     }
 
@@ -629,6 +633,7 @@
 			}
 		});
 	});
+
 </script>
 
 <VerticalSplitLayout splitActive={enableUI}>
