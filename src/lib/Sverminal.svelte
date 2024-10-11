@@ -551,7 +551,7 @@
     function getAllCurrentInput(): string {
 		const lastChild = sverminalDiv.lastElementChild as HTMLElement;
 		return (
-			lastChild?.innerText.replace(promptText, '').replace(ZERO_WIDTH_SPACE_REGEX, '') || ''
+			lastChild?.innerText.replace(promptText, '').replace(ZERO_WIDTH_SPACE_REGEX, '').trimStart() || ''
 		);
 	}
 
