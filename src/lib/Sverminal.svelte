@@ -472,7 +472,7 @@
 
     function onKeyDownPostProcessing(event: KeyboardEvent){
         if(event.code != 'Tab'){
-            const command = getCurrentCommand();
+            const command = getAllCurrentInput();
             dispatch('get-current-command', command);
         }
     }
@@ -545,6 +545,13 @@
 		const lastChild = sverminalDiv.lastElementChild as HTMLElement;
 		return (
 			lastChild?.innerText.replace(promptText, '').replace(ZERO_WIDTH_SPACE_REGEX, '').trim() || ''
+		);
+	}
+
+    function getAllCurrentInput(): string {
+		const lastChild = sverminalDiv.lastElementChild as HTMLElement;
+		return (
+			lastChild?.innerText.replace(promptText, '').replace(ZERO_WIDTH_SPACE_REGEX, '') || ''
 		);
 	}
 
