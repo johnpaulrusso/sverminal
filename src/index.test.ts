@@ -40,14 +40,14 @@ describe('auto completer tests with options', () => {
 	it('auto completer iterates through options with input', () => {
 		expect(autoCompleter.getNextOption('st')).toBe('start');
 		expect(autoCompleter.getNextOption('st')).toBe('stop');
-	    expect(autoCompleter.getNextOption('st')).toBe('start');
+		expect(autoCompleter.getNextOption('st')).toBe('start');
 	});
 
-    it('auto completer returns empty for unknown option', () => {
+	it('auto completer returns empty for unknown option', () => {
 		expect(autoCompleter.getNextOption('abc')).toBe('');
 	});
 
-    it('auto completer resets index when input changes', () => {
+	it('auto completer resets index when input changes', () => {
 		expect(autoCompleter.getNextOption('')).toBe('fast forward');
 		expect(autoCompleter.getNextOption('')).toBe('pause');
 		expect(autoCompleter.getNextOption('')).toBe('rewind');

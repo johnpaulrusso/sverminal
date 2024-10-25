@@ -5,21 +5,21 @@
 	import customConfig from '$lib/sverminal.config.js';
 	import { SverminalReader } from '$lib/reader/reader.js';
 
-    const COMMANDS = [
-        'echo',
-        'warn',
-        'error',
-        'info',
-        'countdown',
-        'freeform-demo',
-        'input-demo',
-        'split-demo'
-    ];
+	const COMMANDS = [
+		'echo',
+		'warn',
+		'error',
+		'info',
+		'countdown',
+		'freeform-demo',
+		'input-demo',
+		'split-demo'
+	];
 
 	let sverminalReader = new SverminalReader();
 	let sverminalWriter = new SverminalWriter();
 	let showSplit: boolean = false;
-    let autoCompletes = COMMANDS;
+	let autoCompletes = COMMANDS;
 
 	function echo(args: string[]) {
 		if (args.length == 0) {
@@ -58,8 +58,14 @@
 	}
 
 	function printStylesExample() {
-		const text = 'Style';
-		sverminalWriter.write('|-----------------------------|');
+		sverminalWriter.write('Check out the source code on ', ['text-cyan-500']);
+		sverminalWriter.writeLink(
+			'Github!',
+			'https://github.com/johnpaulrusso/sverminal?tab=readme-ov-file#readme',
+			['text-purple-500', 'underline']
+		);
+		sverminalWriter.write(' Contributors welcome!', ['text-cyan-500']);
+		sverminalWriter.write('\n|-----------------------------|');
 		sverminalWriter.write('\n');
 		sverminalWriter.write('|     ');
 		sverminalWriter.write(` Red  `, ['text-red-500']);
@@ -176,16 +182,16 @@
 		}
 	}
 
-    function getCurrentCommand(event: CustomEvent){
-        const command = event.detail;
-        const commandParts: string[] = command.split(' ');
+	function getCurrentCommand(event: CustomEvent) {
+		const command = event.detail;
+		const commandParts: string[] = command.split(' ');
 
-        if (commandParts.length > 0 && COMMANDS.findIndex(c => c === commandParts[0]) != -1){
-            autoCompletes = [];
-        }else{
-            autoCompletes = COMMANDS;
-        }
-    }
+		if (commandParts.length > 0 && COMMANDS.findIndex((c) => c === commandParts[0]) != -1) {
+			autoCompletes = [];
+		} else {
+			autoCompletes = COMMANDS;
+		}
+	}
 
 	async function processCommand(command: string): Promise<void> {
 		// Your command processing logic here
@@ -227,7 +233,7 @@
 
 <div class="w-full flex flex-col justify-center items-center text-center p-4 md:p-8 gap-2 md:gap-4">
 	<h1 class="text-5xl md:text-7xl font-mono font-bold">SVERMINAL</h1>
-	<h3 class="text-sm md:text-base font-mono">Terminal emulator built on Svelte and Tailwind</h3>
+	<h3 class="text-sm md:text-base font-mono">Terminal emulator built on Svelte and Tailwind. Version {SVERMINAL_VERSION}.</h3>
 
 	<div class="w-full h-[500px] px-4 pt-4">
 		<Sverminal
@@ -237,8 +243,8 @@
 			promptPrefix="sverminal"
 			config={customConfig}
 			enableUI={showSplit}
-            autoCompletes={autoCompletes}
-            on:get-current-command={getCurrentCommand}
+			{autoCompletes}
+			on:get-current-command={getCurrentCommand}
 		/>
 	</div>
 
