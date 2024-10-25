@@ -22,7 +22,7 @@
 	import type { CommandHistoryStrategy } from './history/commandhistorystrategy.js';
 	import { AutoCompleter } from './autocomplete/autocomplete.js';
 
-    const dispatch = createEventDispatcher();
+	const dispatch = createEventDispatcher();
 
 	export let processor: (command: string) => Promise<void>;
 	export let promptPrefix = 'sverminal';
@@ -34,11 +34,11 @@
 	 * Optionally pass in a list of strings that will 'auto-complete' when the user presses the TAB key.
 	 */
 	export let autoCompletes: string[] = [];
-    const autoCompleter: AutoCompleter = new AutoCompleter();
-    let cachedInput: string | undefined = undefined;
+	const autoCompleter: AutoCompleter = new AutoCompleter();
+	let cachedInput: string | undefined = undefined;
 
 	$: promptText = `${promptPrefix}${config.promptSuffix}`;
-    $: autoCompleter.setOptions(autoCompletes);
+	$: autoCompleter.setOptions(autoCompletes);
 
 	const ZERO_WIDTH_SPACE_REGEX: RegExp = /\u200B/g;
 
@@ -127,6 +127,16 @@
 		textElement.setAttribute('contenteditable', 'false');
 		textElement.classList.add(...styles);
 		target.appendChild(textElement);
+		target.scrollTop = target.scrollHeight;
+	}
+
+	function printLink(text: string, url: string, styles: string[], target: HTMLDivElement) {
+		let anchorElement = document.createElement('a') as HTMLAnchorElement;
+		anchorElement.innerHTML = `${text}`;
+		anchorElement.setAttribute('href', url);
+		anchorElement.setAttribute('contenteditable', 'false');
+		anchorElement.classList.add(...styles);
+		target.appendChild(anchorElement);
 		target.scrollTop = target.scrollHeight;
 	}
 
@@ -443,49 +453,47 @@
 		}
 	}
 
-    function onKeyDownTab(event: KeyboardEvent) {
-        event.preventDefault();
-        
-        const span = userSpans[workingChildIndex - 1];
-        if(!span){
-            return;
-        }
+	function onKeyDownTab(event: KeyboardEvent) {
+		event.preventDefault();
 
-        const currentInput = span.text();
+		const span = userSpans[workingChildIndex - 1];
+		if (!span) {
+			return;
+		}
 
-        //If no input is cached (first time hitting TAB)
-        if(cachedInput === undefined){
-            cachedInput = currentInput;
-        }
-        const autoComplete = autoCompleter.getNextOption(cachedInput);
+		const currentInput = span.text();
 
-        if(autoComplete){
-            span.replaceText(autoComplete);
-        }
-    }
+		//If no input is cached (first time hitting TAB)
+		if (cachedInput === undefined) {
+			cachedInput = currentInput;
+		}
+		const autoComplete = autoCompleter.getNextOption(cachedInput);
 
-    function onKeyDownPreProcessing(event: KeyboardEvent){
-        if(event.code != 'Tab'){
-            cachedInput = undefined;
-        }
-    }
+		if (autoComplete) {
+			span.replaceText(autoComplete);
+		}
+	}
 
-    function onKeyDownPostProcessing(event: KeyboardEvent){
-        if(event.code != 'Tab'){
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                const command = getAllCurrentInput();
-                dispatch('get-current-command', command);
-              })
-            })
-        }
-    }
+	function onKeyDownPreProcessing(event: KeyboardEvent) {
+		if (event.code != 'Tab') {
+			cachedInput = undefined;
+		}
+	}
 
+	function onKeyDownPostProcessing(event: KeyboardEvent) {
+		if (event.code != 'Tab') {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					const command = getAllCurrentInput();
+					dispatch('get-current-command', command);
+				});
+			});
+		}
+	}
 
 	/// Event Handling! ///
 	function onKeyDown(event: KeyboardEvent) {
-
-        onKeyDownPreProcessing(event);
+		onKeyDownPreProcessing(event);
 
 		if (event.code === 'Enter') {
 			console.log('ENTER!');
@@ -514,7 +522,7 @@
 		} else if (event.code === 'Tab') {
 			//TAB - Reserved for future feature to autocomplete text.
 			//TODO - autocomplete.
-            onKeyDownTab(event);
+			onKeyDownTab(event);
 		} else {
 			//ELSE - For now simply format args.
 			setTimeout(() => {
@@ -522,7 +530,7 @@
 			}, 25);
 		}
 
-        onKeyDownPostProcessing(event);
+		onKeyDownPostProcessing(event);
 	}
 
 	function onPaste(event: ClipboardEvent) {
@@ -552,10 +560,13 @@
 		);
 	}
 
-    function getAllCurrentInput(): string {
+	function getAllCurrentInput(): string {
 		const lastChild = sverminalDiv.lastElementChild as HTMLElement;
 		return (
-			lastChild?.innerText.replace(promptText, '').replace(ZERO_WIDTH_SPACE_REGEX, '').trimStart() || ''
+			lastChild?.innerText
+				.replace(promptText, '')
+				.replace(ZERO_WIDTH_SPACE_REGEX, '')
+				.trimStart() || ''
 		);
 	}
 
@@ -624,6 +635,11 @@
 							print(value.message, value.styles ?? [], htmlTarget);
 						}
 						break;
+					case SverminalResponseType.FREEFORM_LINK:
+						{
+							printLink(value.message, value.extra ?? '', value.styles ?? [], htmlTarget);
+						}
+						break;
 					case SverminalResponseType.CLEAR:
 						{
 							htmlTarget.textContent = '';
@@ -633,7 +649,6 @@
 			}
 		});
 	});
-
 </script>
 
 <VerticalSplitLayout splitActive={enableUI}>

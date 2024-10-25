@@ -211,13 +211,13 @@ export class SverminalUserSpan extends SverminalSpan {
 		this.placeCursor(SverminalUserSpan.BASE_LENGTH + 1);
 	}
 
-    replaceText(text: string) {
-        if (this.textnode.textContent === null) {
+	replaceText(text: string) {
+		if (this.textnode.textContent === null) {
 			throw new Error('This should never occur!');
 		}
 		this.textnode.textContent = ` ${ZERO_WIDTH_SPACE}${text}`;
 		this.placeCursorAtEnd();
-    }
+	}
 
 	insertAtCursorPosition(text: string) {
 		if (this.textnode.textContent === null) {

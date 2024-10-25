@@ -6,6 +6,7 @@ export enum SverminalResponseType {
 	ERROR,
 	INFO,
 	FREEFORM, //Style and newlines are left to the user to define.
+	FREEFORM_LINK,
 	CLEAR //Clear all responses!
 }
 
@@ -19,6 +20,7 @@ export interface SverminalResponse {
 	message: string;
 	styles?: string[];
 	target?: SverminalResponseTarget;
+	extra?: string;
 }
 
 export class SverminalWriter {
@@ -34,6 +36,16 @@ export class SverminalWriter {
 			message,
 			styles,
 			target
+		});
+	}
+
+	writeLink(text: string, url: string, styles?: string[], target?: SverminalResponseTarget) {
+		this.store.set({
+			type: SverminalResponseType.FREEFORM_LINK,
+			message: text,
+			styles,
+			target,
+			extra: url
 		});
 	}
 

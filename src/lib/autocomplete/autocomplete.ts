@@ -17,21 +17,21 @@ export class AutoCompleter {
 
 	setOptions(options: string[]) {
 		this.options = options.sort((a, b) => a.localeCompare(b));
-        this.currentOptionIndex = 0;
+		this.currentOptionIndex = 0;
 		this.lastKnownUserInput = '';
 	}
 
 	getNextOption(userInput: string): string {
 		let result: string = '';
 
-        //Detect input changes to reset index.
+		//Detect input changes to reset index.
 		const inputChanged = userInput !== this.lastKnownUserInput;
 		if (inputChanged) {
 			this.currentOptionIndex = 0;
 			this.lastKnownUserInput = userInput;
 		}
 
-        //Handle cases of empty input.
+		//Handle cases of empty input.
 		if (!userInput && this.options.length == 0) {
 			return '';
 		} else if (!userInput) {
@@ -41,7 +41,7 @@ export class AutoCompleter {
 			return this.options[this.currentOptionIndex++];
 		}
 
-        //Find matching inputs.
+		//Find matching inputs.
 		const results: string[] = [];
 		this.options.forEach((o) => {
 			if (o.startsWith(userInput)) {
