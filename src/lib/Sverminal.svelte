@@ -21,6 +21,7 @@
 	import VerticalSplitLayout from './VerticalSplitLayout.svelte';
 	import type { CommandHistoryStrategy } from './history/commandhistorystrategy.js';
 	import { AutoCompleter } from './autocomplete/autocomplete.js';
+	import * as utils from './utils/utils.js';
 
 	const dispatch = createEventDispatcher();
 
@@ -60,7 +61,7 @@
 			commandInProgress = true;
 			await processor(command);
 		} catch (error) {
-			sverror(`Failed to process command: ${command} - Error: ${error}`, sverminalDiv);
+			appendError(`Failed to process command: ${command} - Error: ${error}`, sverminalDiv);
 		} finally {
 			if (config.newlineBetweenCommands) {
 				appendEmptyLine();
@@ -76,68 +77,65 @@
 		}
 	}
 
+	function appendContent(
+		elementType: string,
+		content: string,
+		styles: string[],
+		target: HTMLDivElement,
+		decorate?: (element: HTMLElement) => void
+	) {
+		let contentElement = document.createElement(elementType);
+		contentElement.setAttribute('contenteditable', 'false');
+		contentElement.classList.add(...styles);
+		contentElement.innerHTML = `${content}`;
+		contentElement.onclick = (e) => {
+			e.stopPropagation();
+			if (!utils.selectionHasNonZeroRange()) {
+				placeCursorAtWorkingIndex();
+			}
+		};
+
+		if (decorate) {
+			decorate(contentElement);
+		}
+
+		target.appendChild(contentElement);
+		target.scrollTop = target.scrollHeight;
+	}
+
 	function appendEmptyLine() {
-		let emptyLine = document.createElement('div');
-		emptyLine.setAttribute('contenteditable', 'false');
-		emptyLine.classList.add(...config.style.text);
-		emptyLine.innerHTML = ` `;
-		sverminalDiv.appendChild(emptyLine);
-		sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
+		appendContent('div', ' ', config.style.text, sverminalDiv);
 	}
 
-	function svecho(message: string, target: HTMLDivElement) {
-		let line = document.createElement('div');
-		line.innerHTML = `${message}`;
-		line.setAttribute('contenteditable', 'false');
-		line.classList.add(...config.style.text);
-		target.appendChild(line);
-		target.scrollTop = target.scrollHeight;
+	function appendEcho(message: string, target: HTMLDivElement) {
+		appendContent('div', message, config.style.text, target);
 	}
 
-	function svwarn(message: string, target: HTMLDivElement) {
-		let line = document.createElement('div');
-		line.innerHTML = `${message}`;
-		line.setAttribute('contenteditable', 'false');
-		line.classList.add(...config.style.warn);
-		target.appendChild(line);
-		target.scrollTop = target.scrollHeight;
+	function appendWarn(message: string, target: HTMLDivElement) {
+		appendContent('div', message, config.style.warn, target);
 	}
 
-	function sverror(message: string, target: HTMLDivElement) {
-		let line = document.createElement('div');
-		line.innerHTML = `${message}`;
-		line.setAttribute('contenteditable', 'false');
-		line.classList.add(...config.style.error);
-		target.appendChild(line);
-		target.scrollTop = target.scrollHeight;
+	function appendError(message: string, target: HTMLDivElement) {
+		appendContent('div', message, config.style.error, target);
 	}
 
-	function svinfo(message: string, target: HTMLDivElement) {
-		let line = document.createElement('div');
-		line.innerHTML = `${message}`;
-		line.setAttribute('contenteditable', 'false');
-		line.classList.add(...config.style.info);
-		target.appendChild(line);
-		target.scrollTop = target.scrollHeight;
+	function appendInfo(message: string, target: HTMLDivElement) {
+		appendContent('div', message, config.style.info, target);
 	}
 
-	function print(text: string, styles: string[], target: HTMLDivElement) {
-		let textElement = document.createElement('span');
-		textElement.innerHTML = `${text}`;
-		textElement.setAttribute('contenteditable', 'false');
-		textElement.classList.add(...styles);
-		target.appendChild(textElement);
-		target.scrollTop = target.scrollHeight;
+	function appendFreeform(message: string, styles: string[], target: HTMLDivElement) {
+		appendContent('span', message, styles, target);
 	}
 
-	function printLink(text: string, url: string, styles: string[], target: HTMLDivElement) {
-		let anchorElement = document.createElement('a') as HTMLAnchorElement;
-		anchorElement.innerHTML = `${text}`;
-		anchorElement.setAttribute('href', url);
-		anchorElement.setAttribute('contenteditable', 'false');
-		anchorElement.classList.add(...styles);
-		target.appendChild(anchorElement);
-		target.scrollTop = target.scrollHeight;
+	function appendFreeformAnchor(
+		message: string,
+		url: string,
+		styles: string[],
+		target: HTMLDivElement
+	) {
+		appendContent('a', message, styles, target, (e: HTMLElement) => {
+			e.setAttribute('href', url);
+		});
 	}
 
 	function appendPrompt() {
@@ -173,6 +171,9 @@
 		workingCommandLineDiv.classList.add('focus:outline-none');
 		workingCommandLineDiv.onclick = (event) => {
 			event.stopPropagation();
+			if (!utils.selectionHasNonZeroRange()) {
+				placeCursorAtWorkingIndex();
+			}
 		};
 
 		appendPrompt();
@@ -194,7 +195,6 @@
 			workingCommandLineDiv.appendChild(argSpan.element());
 			userSpans.push(argSpan);
 			placeCursorAtWorkingIndex();
-			console.log('new arg last!');
 		} else {
 			userSpans = [
 				...userSpans.slice(0, workingChildIndex - 1),
@@ -206,7 +206,6 @@
 				workingCommandLineDiv.children[workingChildIndex]
 			);
 			placeCursorAtWorkingIndex(true);
-			console.log('new arg before!');
 		}
 	}
 
@@ -223,20 +222,16 @@
 		workingChildIndex--;
 
 		placeCursorAtWorkingIndex();
-
-		console.log('rem arg');
 	}
 
 	function decrementWorkingArg() {
 		workingChildIndex--;
 		placeCursorAtWorkingIndex();
-		console.log('dec arg');
 	}
 
 	function incrementWorkingArg() {
 		workingChildIndex++;
 		placeCursorAtWorkingIndex(true);
-		console.log('inc arg');
 	}
 
 	function splitWorkingSpan() {
@@ -392,16 +387,10 @@
 				preventDefault = true;
 				splitWorkingSpan(); //TODO
 				placeCursorAtWorkingIndex(true);
-				console.log('space split!');
 			} else if (span.position() === SpanPosition.END) {
 				preventDefault = true;
 				appendNewArg();
-				console.log('space new!');
-			} else {
-				console.log('space nominal!');
 			}
-		} else {
-			console.log('space nominal!');
 		}
 		return preventDefault;
 	}
@@ -496,7 +485,6 @@
 		onKeyDownPreProcessing(event);
 
 		if (event.code === 'Enter') {
-			console.log('ENTER!');
 			onKeyDownEnter(event);
 		} else if (event.code === 'Space') {
 			// SPACE - Create new arguments. This may involve splitting existing commands/args.
@@ -545,12 +533,9 @@
 	}
 
 	function onClick() {
-		//Prevent automatic cursor movement if the user has a selection.
-		const selection = window.getSelection();
-		if (selection) {
-			return;
+		if (!utils.selectionHasNonZeroRange()) {
+			placeCursorAtWorkingIndex();
 		}
-		placeCursorAtWorkingIndex();
 	}
 
 	function getCurrentCommand(): string {
@@ -589,6 +574,9 @@
 				workingCommandLineDiv.classList.add('focus:outline-none');
 				workingCommandLineDiv.onclick = (event) => {
 					event.stopPropagation();
+					if (!utils.selectionHasNonZeroRange()) {
+						placeCursorAtWorkingIndex();
+					}
 				};
 				sverminalDiv.appendChild(workingCommandLineDiv);
 
@@ -612,32 +600,37 @@
 				switch (value.type) {
 					case SverminalResponseType.ECHO:
 						{
-							svecho(value.message, htmlTarget);
+							appendEcho(value.message, htmlTarget);
 						}
 						break;
 					case SverminalResponseType.WARNING:
 						{
-							svwarn(value.message, htmlTarget);
+							appendWarn(value.message, htmlTarget);
 						}
 						break;
 					case SverminalResponseType.ERROR:
 						{
-							sverror(value.message, htmlTarget);
+							appendError(value.message, htmlTarget);
 						}
 						break;
 					case SverminalResponseType.INFO:
 						{
-							svinfo(value.message, htmlTarget);
+							appendInfo(value.message, htmlTarget);
 						}
 						break;
 					case SverminalResponseType.FREEFORM:
 						{
-							print(value.message, value.styles ?? [], htmlTarget);
+							appendFreeform(value.message, value.styles ?? [], htmlTarget);
 						}
 						break;
 					case SverminalResponseType.FREEFORM_LINK:
 						{
-							printLink(value.message, value.extra ?? '', value.styles ?? [], htmlTarget);
+							appendFreeformAnchor(
+								value.message,
+								value.extra ?? '',
+								value.styles ?? [],
+								htmlTarget
+							);
 						}
 						break;
 					case SverminalResponseType.CLEAR:

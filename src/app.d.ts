@@ -10,6 +10,6 @@ declare global {
 	}
 }
 
-declare const SVERMINAL_VERSION: string
+declare const SVERMINAL_VERSION: string;
 
 export {};

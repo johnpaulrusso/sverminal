@@ -12,7 +12,7 @@ export default defineConfig({
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
 	},
-    define: {
-        SVERMINAL_VERSION: JSON.stringify(pkg.version)
-    }
+	define: {
+		SVERMINAL_VERSION: JSON.stringify(pkg.version)
+	}
 });

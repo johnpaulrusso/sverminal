@@ -280,7 +280,7 @@ describe('sverminal user action - RIGHT ARROW', () => {
 	});
 });
 
-describe.only('sverminal user action - PASTE', () => {
+describe('sverminal user action - PASTE', () => {
 	it('paste empty clipboard into an empty line', () => {
 		cy.sverminalPaste('');
 		cy.verifySelectionAndRange(2, ' \u200B');
