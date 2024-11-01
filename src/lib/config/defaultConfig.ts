@@ -14,7 +14,8 @@ export const defaultConfig = {
 		method: 'memory', //memory (default), sessionStorage (tbd), localStorage (tbd)
 		limit: 10
 	},
-	newlineBetweenCommands: false
+	newlineBetweenCommands: false,
+	quoteMultiWordAutoCompletes: true
 };
 
 export type Config = typeof defaultConfig;

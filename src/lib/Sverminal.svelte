@@ -459,7 +459,11 @@
 		const autoComplete = autoCompleter.getNextOption(cachedInput);
 
 		if (autoComplete) {
-			span.replaceText(autoComplete);
+			if (config.quoteMultiWordAutoCompletes && autoComplete.split(' ').length > 1) {
+				span.replaceText(`'${autoComplete}''`);
+			} else {
+				span.replaceText(autoComplete);
+			}
 		}
 	}
 
