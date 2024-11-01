@@ -460,7 +460,7 @@
 
 		if (autoComplete) {
 			if (config.quoteMultiWordAutoCompletes && autoComplete.split(' ').length > 1) {
-				span.replaceText(`'${autoComplete}''`);
+				span.replaceText(`'${autoComplete}'`);
 			} else {
 				span.replaceText(autoComplete);
 			}
