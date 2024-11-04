@@ -17,3 +17,9 @@ export function selectionHasNonZeroRange(): boolean {
 
 	return rangeSize != 0;
 }
+
+export enum CommandIndex {
+	PROMPT = 0,
+	COMMAND,
+	ARGS
+}

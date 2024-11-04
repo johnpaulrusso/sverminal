@@ -14,6 +14,7 @@ const customConfig = {
 		method: 'memory', //memory (default), sessionstorage (tbd), localstorage (tbd)
 		limit: 10
 	},
-	newlineBetweenCommands: false
+	newlineBetweenCommands: false,
+	quoteMultiWordAutoCompletes: true
 };
 export default customConfig;
