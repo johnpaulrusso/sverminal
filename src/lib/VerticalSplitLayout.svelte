@@ -1,23 +1,29 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, type Snippet } from 'svelte';
 
-	export let splitActive: boolean = false;
+	let {
+		splitActive = false,
+		topContent,
+		bottomContent
+	}: { splitActive: boolean; topContent: Snippet; bottomContent: Snippet } = $props();
 
 	let containerDiv: HTMLDivElement | null = null;
 	let topDiv: HTMLDivElement | null = null;
 	let bottomDiv: HTMLDivElement | null = null;
-	let divider: HTMLButtonElement | null = null;
-	let isResizing: boolean = false;
+	let divider: HTMLButtonElement | null = $state(null);
+	let isResizing: boolean = $state(false);
 	let resizeObserver: ResizeObserver | null = null;
 
 	const MIN_SECTION_HEIGHT_PX = 50;
 
-	$: if (!splitActive) {
-		if (topDiv && bottomDiv) {
-			topDiv.style.height = '';
-			bottomDiv.style.height = '';
+	$effect(() => {
+		if (!splitActive) {
+			if (topDiv && bottomDiv) {
+				topDiv.style.height = '';
+				bottomDiv.style.height = '';
+			}
 		}
-	}
+	});
 
 	function onMouseDown(e: MouseEvent) {
 		isResizing = true;
@@ -105,15 +111,16 @@
 			? 'border-b-[1px]'
 			: ''} border-slate-700"
 	>
-		<slot name="top" />
+		{@render topContent()}
 	</div>
 	{#if splitActive}
 		<button
 			bind:this={divider}
+			aria-label="divider"
 			class="absolute h-[5px] w-full left-0 bottom-[50%] z-10 cursor-row-resize op
         hover:bg-cyan-800 hover:duration-200 hover:delay-200 hover:opacity-90
         {isResizing ? 'bg-cyan-800 opacity-90' : 'bg-slate-700 opacity-0'}"
-			on:mousedown={onMouseDown}
+			onmousedown={onMouseDown}
 		>
 		</button>
 	{/if}
@@ -123,6 +130,6 @@
 			? 'h-[50%]'
 			: 'h-full'} min-h-[{MIN_SECTION_HEIGHT_PX}px] left-0 z-0 overflow-x-auto bottom-0 bg-slate-900"
 	>
-		<slot name="bottom" />
+		{@render bottomContent()}
 	</div>
 </div>

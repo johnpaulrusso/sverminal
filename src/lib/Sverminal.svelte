@@ -1,23 +1,14 @@
-<script context="module" lang="ts">
-	export enum CommandIndex {
-		PROMPT = 0,
-		COMMAND,
-		ARGS
-	}
-</script>
-
 <script lang="ts">
-	import { onMount, createEventDispatcher, afterUpdate } from 'svelte';
-	import { defaultConfig, type Config } from '$lib/config/defaultConfig.js';
+	import { onMount, createEventDispatcher } from 'svelte';
 	import { createCommandHistory } from '$lib/history/factory.js';
 	import {
 		SverminalResponseTarget,
 		SverminalResponseType,
-		type SverminalResponse,
-		type SverminalWriter
+		SverminalWriter,
+		type SverminalResponse
 	} from './writer/writer.js';
 	import { SverminalUserSpan, SverminalPromptSpan, SpanPosition } from './core/span.js';
-	import type { SverminalReader } from './reader/reader.js';
+	import { SverminalReader } from './reader/reader.js';
 	import VerticalSplitLayout from './VerticalSplitLayout.svelte';
 	import type { CommandHistoryStrategy } from './history/commandhistorystrategy.js';
 	import { AutoCompleter } from './autocomplete/autocomplete.js';
@@ -25,27 +16,35 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let processor: (command: string) => Promise<void>;
-	export let promptPrefix = 'sverminal';
-	export let config: Config = defaultConfig;
-	export let writer: SverminalWriter;
-	export let reader: SverminalReader;
+	let {
+		processor,
+		promptPrefix = 'sverminal',
+		config,
+		writer,
+		reader,
+		autoCompletes = [], //Optionally pass in a list of strings that will 'auto-complete' when the user presses the TAB key.
+		enableUI = false
+	}: {
+		processor: (command: string) => Promise<void>;
+		promptPrefix: string;
+		config: any;
+		writer: SverminalWriter;
+		reader: SverminalReader;
+		autoCompletes: string[];
+		enableUI: boolean;
+	} = $props();
 
-	/**
-	 * Optionally pass in a list of strings that will 'auto-complete' when the user presses the TAB key.
-	 */
-	export let autoCompletes: string[] = [];
 	const autoCompleter: AutoCompleter = new AutoCompleter();
 	let cachedInput: string | undefined = undefined;
 
-	$: promptText = `${promptPrefix}${config.promptSuffix}`;
-	$: autoCompleter.setOptions(autoCompletes);
+	const promptText = $derived(`${promptPrefix}${config.promptSuffix}`);
+	$effect(() => autoCompleter.setOptions(autoCompletes));
 
 	const ZERO_WIDTH_SPACE_REGEX: RegExp = /\u200B/g;
 
 	let sverminalDiv: HTMLDivElement;
 	let workingCommandLineDiv: HTMLDivElement;
-	let workingChildIndex: number = CommandIndex.COMMAND;
+	let workingChildIndex: number = utils.CommandIndex.COMMAND;
 	let historyIndex = -1;
 	let userSpans: SverminalUserSpan[] = [];
 	let commandInProgress = false;
@@ -53,7 +52,6 @@
 	let workingReaderSpan: SverminalUserSpan;
 
 	//TOP/SPLIT VIEW
-	export let enableUI: boolean = false;
 	let sverminalUiDiv: HTMLDivElement;
 
 	async function handleCommand(command: string) {
@@ -181,7 +179,7 @@
 
 		sverminalDiv.appendChild(workingCommandLineDiv);
 
-		workingChildIndex = CommandIndex.COMMAND;
+		workingChildIndex = utils.CommandIndex.COMMAND;
 		placeCursorAtWorkingIndex();
 
 		sverminalDiv.scrollTop = sverminalDiv.scrollHeight;
@@ -210,7 +208,7 @@
 	}
 
 	function removeWorkingArg() {
-		if (workingChildIndex < CommandIndex.ARGS) {
+		if (workingChildIndex < utils.CommandIndex.ARGS) {
 			console.warn('sverminal tried to remove the command span.');
 			return;
 		}
@@ -294,7 +292,7 @@
 	function lockCommand() {
 		workingCommandLineDiv.setAttribute('contenteditable', 'false');
 		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
-			if (index >= CommandIndex.COMMAND) {
+			if (index >= utils.CommandIndex.COMMAND) {
 				childspan.setAttribute('contenteditable', 'false');
 			}
 		});
@@ -302,7 +300,7 @@
 
 	function formatArgs() {
 		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
-			if (index >= CommandIndex.ARGS) {
+			if (index >= utils.CommandIndex.ARGS) {
 				if (childspan.innerHTML.replace(ZERO_WIDTH_SPACE_REGEX, '').trim().startsWith('-')) {
 					childspan.classList.add(...config.style.flags);
 					childspan.classList.remove(...config.style.text);
@@ -340,7 +338,7 @@
 			}
 		}
 		userSpans = [];
-		workingChildIndex = CommandIndex.COMMAND;
+		workingChildIndex = utils.CommandIndex.COMMAND;
 		appendCommand();
 		placeCursorAtWorkingIndex();
 		insertText(historicalCommand);
@@ -405,9 +403,9 @@
 		}
 
 		if (position <= SpanPosition.USER_START) {
-			if (workingChildIndex == CommandIndex.COMMAND) {
+			if (workingChildIndex == utils.CommandIndex.COMMAND) {
 				event.preventDefault();
-			} else if (workingChildIndex >= CommandIndex.ARGS) {
+			} else if (workingChildIndex >= utils.CommandIndex.ARGS) {
 				event.preventDefault();
 				if (span.empty()) {
 					removeWorkingArg();
@@ -424,7 +422,7 @@
 
 		if (span.position() <= SpanPosition.USER_START) {
 			event.preventDefault();
-			if (workingChildIndex >= CommandIndex.ARGS) {
+			if (workingChildIndex >= utils.CommandIndex.ARGS) {
 				decrementWorkingArg();
 			}
 		}
@@ -649,28 +647,30 @@
 </script>
 
 <VerticalSplitLayout splitActive={enableUI}>
-	<div
-		bind:this={sverminalUiDiv}
-		slot="top"
-		contenteditable="false"
-		spellcheck="false"
-		class="w-full h-full text-left p-2 font-mono text-sm md:text-base bg-slate-900 text-slate-100 resize-none overflow-auto"
-		aria-multiline="true"
-		role="textbox"
-	></div>
-	<div
-		bind:this={sverminalDiv}
-		slot="bottom"
-		contenteditable="true"
-		spellcheck="false"
-		class="sverminal-main w-full h-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 overflow-auto text-sm md:text-base text-left"
-		role="textbox"
-		aria-multiline="true"
-		tabindex="0"
-		on:keydown={onKeyDown}
-		on:click={onClick}
-		on:paste={onPaste}
-	></div>
+	{#snippet topContent()}
+		<div
+			bind:this={sverminalUiDiv}
+			contenteditable="false"
+			spellcheck="false"
+			class="w-full h-full text-left p-2 font-mono text-sm md:text-base bg-slate-900 text-slate-100 resize-none overflow-auto"
+			aria-multiline="true"
+			role="textbox"
+		></div>
+	{/snippet}
+	{#snippet bottomContent()}
+		<div
+			bind:this={sverminalDiv}
+			contenteditable="true"
+			spellcheck="false"
+			class="sverminal-main w-full h-full resize-none bg-slate-900 text-slate-100 font-mono rounded-md p-2 overflow-auto text-sm md:text-base text-left"
+			role="textbox"
+			aria-multiline="true"
+			tabindex="0"
+			onkeydown={onKeyDown}
+			onclick={onClick}
+			onpaste={onPaste}
+		></div>
+	{/snippet}
 </VerticalSplitLayout>
 
 <style>

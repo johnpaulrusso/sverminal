@@ -232,7 +232,63 @@
 </script>
 
 <div class="w-full flex flex-col justify-center items-center text-center p-4 md:p-8 gap-2 md:gap-4">
-	<h1 class="text-5xl md:text-7xl font-mono font-bold">SVERMINAL</h1>
+	<h1 class="text-5xl md:text-7xl font-mono font-bold flex justify-around items-center gap-2">
+		<svg
+			width="48"
+			height="48"
+			viewBox="0 0 33.866666 33.866666"
+			version="1.1"
+			id="svg1"
+			xmlns="http://www.w3.org/2000/svg"
+		>
+			<defs id="defs1" />
+			<g id="layer1">
+				<path
+					style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+					d="m 10.996713,6.5634736 6.62047,-4.600666 5.049511,3.141918 3.702974,-3.478552 7.069317,3.366341 -6.732682,-1.234325 -3.590764,4.2640296 -5.386145,-4.0396076 z"
+					id="path1"
+				/>
+				<path
+					style="fill:#000000;stroke:none;stroke-width:1;fill-opacity:1"
+					d="m 0.60191876,18.717501 6.62046964,-4.600666 5.0495116,3.141918 3.702974,-3.478552 7.069317,3.366341 -6.732682,-1.234325 -3.590764,4.26403 -5.3861456,-4.039608 z"
+					id="path1-1"
+				/>
+				<path
+					style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+					d="m 10.635969,30.901593 6.62047,-4.600666 5.049511,3.141918 3.702974,-3.478552 7.069317,3.366341 -6.732682,-1.234325 -3.590764,4.26403 -5.386145,-4.039608 z"
+					id="path1-9"
+				/>
+			</g>
+		</svg>
+		<div>SVERMINAL</div>
+		<svg
+			width="48"
+			height="48"
+			viewBox="0 0 33.866666 33.866666"
+			version="1.1"
+			id="svg1"
+			xmlns="http://www.w3.org/2000/svg"
+		>
+			<defs id="defs1" />
+			<g id="layer1" transform="matrix(-1,0,0,1,34.040904,0)">
+				<path
+					style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+					d="m 10.996713,6.5634736 6.62047,-4.600666 5.049511,3.141918 3.702974,-3.478552 7.069317,3.366341 -6.732682,-1.234325 -3.590764,4.2640296 -5.386145,-4.0396076 z"
+					id="path1"
+				/>
+				<path
+					style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+					d="m 0.60191876,18.717501 6.62046964,-4.600666 5.0495116,3.141918 3.702974,-3.478552 7.069317,3.366341 -6.732682,-1.234325 -3.590764,4.26403 -5.3861456,-4.039608 z"
+					id="path1-1"
+				/>
+				<path
+					style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+					d="m 10.635969,30.901593 6.62047,-4.600666 5.049511,3.141918 3.702974,-3.478552 7.069317,3.366341 -6.732682,-1.234325 -3.590764,4.26403 -5.386145,-4.039608 z"
+					id="path1-9"
+				/>
+			</g>
+		</svg>
+	</h1>
 	<h3 class="text-sm md:text-base font-mono">
 		Terminal emulator built on Svelte and Tailwind. Version {SVERMINAL_VERSION}.
 	</h3>
@@ -259,85 +315,87 @@
 		</h3>
 		<div class="overflow-hidden rounded-md border border-gray-300">
 			<table class="min-w-full bg-white text-sm md:text-base">
-				<tr class="w-full bg-gray-100">
-					<th class="py-2 px-4 border-b border-gray-300 text-left text-gray-600 font-semibold"
-						>Command/Input</th
-					>
-					<th class="py-2 px-4 border-b border-gray-300 text-left text-gray-600 font-semibold"
-						>Arguments</th
-					>
-					<th class="py-2 px-4 border-b border-gray-300 text-left text-gray-600 font-semibold"
-						>Description</th
-					>
-				</tr>
-				<tr>
-					<td class="py-2 px-4 border-b border-gray-300">Enter key</td>
-					<td class="py-2 px-4 border-b border-gray-300">N/A</td>
-					<td class="py-2 px-4 border-b border-gray-300">Submit current command or input.</td>
-				</tr>
-				<tr>
-					<td class="py-2 px-4 border-b border-gray-300">Up/Down arrows keys</td>
-					<td class="py-2 px-4 border-b border-gray-300">N/A</td>
-					<td class="py-2 px-4 border-b border-gray-300">Navigate command history.</td>
-				</tr>
-				<tr>
-					<td class="py-2 px-4 border-b border-gray-300">echo</td>
-					<td class="py-2 px-4 border-b border-gray-300">message &lt;string&gt;</td>
-					<td class="py-2 px-4 border-b border-gray-300"
-						>Prints the message back to the terminal.</td
-					>
-				</tr>
-				<tr>
-					<td class="py-2 px-4 border-b border-gray-300">warn</td>
-					<td class="py-2 px-4 border-b border-gray-300">message &lt;string&gt;</td>
-					<td class="py-2 px-4 border-b border-gray-300"
-						>Prints a warning message back to the terminal.</td
-					>
-				</tr>
-				<tr>
-					<td class="py-2 px-4 border-b border-gray-300">error</td>
-					<td class="py-2 px-4 border-b border-gray-300">message &lt;string&gt;</td>
-					<td class="py-2 px-4 border-b border-gray-300"
-						>Prints an error message back to the terminal.</td
-					>
-				</tr>
-				<tr>
-					<td class="py-2 px-4 border-b border-gray-300">info</td>
-					<td class="py-2 px-4 border-b border-gray-300">message &lt;string&gt;</td>
-					<td class="py-2 px-4 border-b border-gray-300"
-						>Prints an info message back to the terminal.</td
-					>
-				</tr>
-				<tr>
-					<td class="py-2 px-4 border-b border-gray-300">countdown</td>
-					<td class="py-2 px-4 border-b border-gray-300">1-99 &lt;number&gt;</td>
-					<td class="py-2 px-4 border-b border-gray-300"
-						>Counts down from the provided number every seconds and prints the value to the
-						terminal.</td
-					>
-				</tr>
-				<tr>
-					<td class="py-2 px-4 border-b border-gray-300">freeform-demo</td>
-					<td class="py-2 px-4 border-b border-gray-300">None</td>
-					<td class="py-2 px-4 border-b border-gray-300"
-						>Prints out block of text that demostrates the ability to mix styles.</td
-					>
-				</tr>
-				<tr>
-					<td class="py-2 px-4 border-b border-gray-300">input-demo</td>
-					<td class="py-2 px-4 border-b border-gray-300">None</td>
-					<td class="py-2 px-4 border-b border-gray-300"
-						>Demonstrates the ability to request additional user input while processing a command.</td
-					>
-				</tr>
-				<tr>
-					<td class="py-2 px-4 border-b border-gray-300">split-demo</td>
-					<td class="py-2 px-4 border-b border-gray-300">Run command for argument list.</td>
-					<td class="py-2 px-4 border-b border-gray-300"
-						>Demonstrates the ability to split the terminal vertically. The vertical view can be
-						used to display additional information to the user.</td
-					>
-				</tr>
+				<tbody>
+					<tr class="w-full bg-gray-100">
+						<th class="py-2 px-4 border-b border-gray-300 text-left text-gray-600 font-semibold"
+							>Command/Input</th
+						>
+						<th class="py-2 px-4 border-b border-gray-300 text-left text-gray-600 font-semibold"
+							>Arguments</th
+						>
+						<th class="py-2 px-4 border-b border-gray-300 text-left text-gray-600 font-semibold"
+							>Description</th
+						>
+					</tr>
+					<tr>
+						<td class="py-2 px-4 border-b border-gray-300">Enter key</td>
+						<td class="py-2 px-4 border-b border-gray-300">N/A</td>
+						<td class="py-2 px-4 border-b border-gray-300">Submit current command or input.</td>
+					</tr>
+					<tr>
+						<td class="py-2 px-4 border-b border-gray-300">Up/Down arrows keys</td>
+						<td class="py-2 px-4 border-b border-gray-300">N/A</td>
+						<td class="py-2 px-4 border-b border-gray-300">Navigate command history.</td>
+					</tr>
+					<tr>
+						<td class="py-2 px-4 border-b border-gray-300">echo</td>
+						<td class="py-2 px-4 border-b border-gray-300">message &lt;string&gt;</td>
+						<td class="py-2 px-4 border-b border-gray-300"
+							>Prints the message back to the terminal.</td
+						>
+					</tr>
+					<tr>
+						<td class="py-2 px-4 border-b border-gray-300">warn</td>
+						<td class="py-2 px-4 border-b border-gray-300">message &lt;string&gt;</td>
+						<td class="py-2 px-4 border-b border-gray-300"
+							>Prints a warning message back to the terminal.</td
+						>
+					</tr>
+					<tr>
+						<td class="py-2 px-4 border-b border-gray-300">error</td>
+						<td class="py-2 px-4 border-b border-gray-300">message &lt;string&gt;</td>
+						<td class="py-2 px-4 border-b border-gray-300"
+							>Prints an error message back to the terminal.</td
+						>
+					</tr>
+					<tr>
+						<td class="py-2 px-4 border-b border-gray-300">info</td>
+						<td class="py-2 px-4 border-b border-gray-300">message &lt;string&gt;</td>
+						<td class="py-2 px-4 border-b border-gray-300"
+							>Prints an info message back to the terminal.</td
+						>
+					</tr>
+					<tr>
+						<td class="py-2 px-4 border-b border-gray-300">countdown</td>
+						<td class="py-2 px-4 border-b border-gray-300">1-99 &lt;number&gt;</td>
+						<td class="py-2 px-4 border-b border-gray-300"
+							>Counts down from the provided number every seconds and prints the value to the
+							terminal.</td
+						>
+					</tr>
+					<tr>
+						<td class="py-2 px-4 border-b border-gray-300">freeform-demo</td>
+						<td class="py-2 px-4 border-b border-gray-300">None</td>
+						<td class="py-2 px-4 border-b border-gray-300"
+							>Prints out block of text that demostrates the ability to mix styles.</td
+						>
+					</tr>
+					<tr>
+						<td class="py-2 px-4 border-b border-gray-300">input-demo</td>
+						<td class="py-2 px-4 border-b border-gray-300">None</td>
+						<td class="py-2 px-4 border-b border-gray-300"
+							>Demonstrates the ability to request additional user input while processing a command.</td
+						>
+					</tr>
+					<tr>
+						<td class="py-2 px-4 border-b border-gray-300">split-demo</td>
+						<td class="py-2 px-4 border-b border-gray-300">Run command for argument list.</td>
+						<td class="py-2 px-4 border-b border-gray-300"
+							>Demonstrates the ability to split the terminal vertically. The vertical view can be
+							used to display additional information to the user.</td
+						>
+					</tr>
+				</tbody>
 			</table>
 		</div>
 	</div>
