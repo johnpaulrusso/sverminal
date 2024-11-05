@@ -2,7 +2,6 @@
 	import '../app.css';
 	import Sverminal from '$lib/Sverminal.svelte';
 	import { SverminalResponseTarget, SverminalWriter } from '$lib/writer/writer.js';
-	import { defaultConfig } from '$lib/config/config.js';
 	import { SverminalReader } from '$lib/reader/reader.js';
 
 	const COMMANDS = [
