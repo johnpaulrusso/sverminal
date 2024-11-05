@@ -1,4 +1,4 @@
-import { defaultConfig } from '$lib/config/defaultConfig.js';
+import { defaultConfig, getHistoryEnabled, getHistoryMethod, getHistoryLimit } from '$lib/config/config.js';
 import type { CommandHistoryStrategy } from '$lib/history/commandhistorystrategy.js';
 import { CommandHistoryDisabled } from '$lib/history/strategies/disabled.js';
 import { CommandHistoryMemory } from '$lib/history/strategies/memory.js';
@@ -7,13 +7,15 @@ import { CommandHistoryBrowserStorage } from '$lib/history/strategies/browsersto
 const config = defaultConfig;
 
 export function createCommandHistory(): CommandHistoryStrategy {
-	if (!config.history.enabled) {
-		return new CommandHistoryDisabled(config.history.limit);
-	} else if (config.history.method === 'localStorage') {
-		return new CommandHistoryBrowserStorage(config.history.limit, 'localStorage');
-	} else if (config.history.method === 'sessionStorage') {
-		return new CommandHistoryBrowserStorage(config.history.limit, 'sessionStorage');
+    const method = getHistoryMethod(config);
+    const limit = getHistoryLimit(config)
+	if (!getHistoryEnabled(config)) {
+		return new CommandHistoryDisabled(limit);
+	} else if (method === 'localStorage') {
+		return new CommandHistoryBrowserStorage(limit, 'localStorage');
+	} else if (method=== 'sessionStorage') {
+		return new CommandHistoryBrowserStorage(limit, 'sessionStorage');
 	} else {
-		return new CommandHistoryMemory(config.history.limit);
+		return new CommandHistoryMemory(limit);
 	}
 }
