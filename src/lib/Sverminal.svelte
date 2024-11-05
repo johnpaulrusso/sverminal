@@ -13,25 +13,37 @@
 	import type { CommandHistoryStrategy } from './history/commandhistorystrategy.js';
 	import { AutoCompleter } from './autocomplete/autocomplete.js';
 	import * as utils from './utils/utils.js';
+	import {
+		type SverminalConfiguration,
+		defaultConfig,
+		getHistoryEnabled,
+		getStyleCommand,
+		getStyleError,
+		getStyleFlags,
+		getStyleInfo,
+		getStylePrompt,
+		getStyleText,
+		getStyleWarn
+	} from './config/config.js';
 
 	const dispatch = createEventDispatcher();
 
 	let {
 		processor,
 		promptPrefix = 'sverminal',
-		config,
-		writer,
-		reader,
+		config = defaultConfig,
+		writer = new SverminalWriter(),
+		reader = new SverminalReader(),
 		autoCompletes = [], //Optionally pass in a list of strings that will 'auto-complete' when the user presses the TAB key.
 		enableUI = false
 	}: {
 		processor: (command: string) => Promise<void>;
-		promptPrefix: string;
-		config: any;
-		writer: SverminalWriter;
-		reader: SverminalReader;
-		autoCompletes: string[];
-		enableUI: boolean;
+		promptPrefix?: string;
+		config?: SverminalConfiguration;
+		writer?: SverminalWriter;
+		reader?: SverminalReader;
+		autoCompletes?: string[];
+		enableUI?: boolean;
 	} = $props();
 
 	const autoCompleter: AutoCompleter = new AutoCompleter();
@@ -61,7 +73,7 @@
 		} catch (error) {
 			appendError(`Failed to process command: ${command} - Error: ${error}`, sverminalDiv);
 		} finally {
-			if (config.newlineBetweenCommands) {
+			if (config.newlineBetweenCommands ?? defaultConfig.newlineBetweenCommands) {
 				appendEmptyLine();
 			}
 			appendNewCommandLine();
@@ -102,23 +114,23 @@
 	}
 
 	function appendEmptyLine() {
-		appendContent('div', ' ', config.style.text, sverminalDiv);
+		appendContent('div', ' ', getStyleText(config), sverminalDiv);
 	}
 
 	function appendEcho(message: string, target: HTMLDivElement) {
-		appendContent('div', message, config.style.text, target);
+		appendContent('div', message, getStyleText(config), target);
 	}
 
 	function appendWarn(message: string, target: HTMLDivElement) {
-		appendContent('div', message, config.style.warn, target);
+		appendContent('div', message, getStyleWarn(config), target);
 	}
 
 	function appendError(message: string, target: HTMLDivElement) {
-		appendContent('div', message, config.style.error, target);
+		appendContent('div', message, getStyleError(config), target);
 	}
 
 	function appendInfo(message: string, target: HTMLDivElement) {
-		appendContent('div', message, config.style.info, target);
+		appendContent('div', message, getStyleInfo(config), target);
 	}
 
 	function appendFreeform(message: string, styles: string[], target: HTMLDivElement) {
@@ -137,12 +149,12 @@
 	}
 
 	function appendPrompt() {
-		const promptSpan = new SverminalPromptSpan(promptText, config.style.prompt);
+		const promptSpan = new SverminalPromptSpan(promptText, getStylePrompt(config));
 		workingCommandLineDiv.appendChild(promptSpan.element());
 	}
 
 	function appendCommand(command: string = '') {
-		let commandSpan = new SverminalUserSpan(config.style.command, command);
+		let commandSpan = new SverminalUserSpan(getStyleCommand(config), command);
 		workingCommandLineDiv.appendChild(commandSpan.element());
 		userSpans.push(commandSpan);
 	}
@@ -186,7 +198,7 @@
 	}
 
 	function appendNewArg(arg: string = '') {
-		let argSpan = new SverminalUserSpan(config.style.text, arg);
+		let argSpan = new SverminalUserSpan(getStyleText(config), arg);
 
 		workingChildIndex++;
 		if (workingChildIndex >= workingCommandLineDiv.children.length) {
@@ -302,11 +314,11 @@
 		Array.from(workingCommandLineDiv.children).forEach((childspan: Element, index: number) => {
 			if (index >= utils.CommandIndex.ARGS) {
 				if (childspan.innerHTML.replace(ZERO_WIDTH_SPACE_REGEX, '').trim().startsWith('-')) {
-					childspan.classList.add(...config.style.flags);
-					childspan.classList.remove(...config.style.text);
+					childspan.classList.add(...getStyleFlags(config));
+					childspan.classList.remove(...getStyleText(config));
 				} else {
-					childspan.classList.add(...config.style.text);
-					childspan.classList.remove(...config.style.flags);
+					childspan.classList.add(...getStyleText(config));
+					childspan.classList.remove(...getStyleFlags(config));
 				}
 			}
 		});
@@ -457,7 +469,10 @@
 		const autoComplete = autoCompleter.getNextOption(cachedInput);
 
 		if (autoComplete) {
-			if (config.quoteMultiWordAutoCompletes && autoComplete.split(' ').length > 1) {
+			if (
+				(config.quoteMultiWordAutoCompletes ?? defaultConfig.quoteMultiWordAutoCompletes) &&
+				autoComplete.split(' ').length > 1
+			) {
 				span.replaceText(`'${autoComplete}'`);
 			} else {
 				span.replaceText(autoComplete);
@@ -506,7 +521,7 @@
 			//TODO - navigate history.
 
 			//replace the current command line with next item in history!
-			if (!reader.isReading && config.history.enabled) {
+			if (!reader.isReading && getHistoryEnabled(config)) {
 				navigateHistory(event.code === 'ArrowDown');
 			}
 		} else if (event.code === 'Tab') {
